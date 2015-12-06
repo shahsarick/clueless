@@ -2,8 +2,8 @@
 
 import threading
 
-from CluelessServer import CluelessServer
-from ServerMessage import ServerMessage
+from server.CluelessServer import CluelessServer
+from server.ServerMessage import ServerMessage
 
 # Create the server
 host = '127.0.0.1'
