@@ -1,66 +1,87 @@
 #!/usr/bin/env python
 
+import cPickle as pickle
 import logging
-import SocketServer
+import select
+import socket
+import threading
 
-import ServerMessage
+from common.Message import Message
+from common.MessageEnum import MessageEnum
+from server.ServerMessage import ServerMessage
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
-class CluelessServer(SocketServer.TCPServer):
+class CluelessServer:
+    __connection_backlog = 10
+    __read_size = 4096
 
-    def __init__(self, host, port, handler_class=ServerMessage):
-        self.logger = logging.getLogger('CluelessServer')
-        self.logger.debug('__init__')
+    def __init__(self, host, port):
+        self._host = host
+        self._port = port
+        self._socket_list = []
         
-        self.server_address = (host, port)
+        self._logger = logging.getLogger('CluelessServer')
         
-        SocketServer.TCPServer.__init__(self, self.server_address, handler_class)
-        
-        return
+        self._server_message = ServerMessage()
     
-    def server_activate(self):
-        self.logger.debug('server_activate')
+    def start_server(self):
+        # Create the server socket
+        self._logger.debug('Creating server socket.')
+        self._server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self._server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         
-        SocketServer.TCPServer.server_activate(self)
+        # Listen for connections
+        self._logger.debug('Listening for connections.')
+        self._server_socket.bind((self._host, self._port))
+        self._server_socket.listen(self.__connection_backlog)
         
-        return
+        self._socket_list.append(self._server_socket)
+        
+        server_thread = threading.Thread(target=self.run)
+        server_thread.start()
     
-    def serve_forever(self):
-        self.logger.debug('serve_forever')
-        self.logger.info('Handling requests, press <Ctrl-Pause/Break or Ctrl-C> to quit')
-        
+    def run(self):
         while True:
-            self.handle_request()
+            ready_to_read, ready_to_write, input_error = select.select(self._socket_list, [], [], 0)
+            
+            # Loop through list of sockets that have data
+            for sock in ready_to_read:
+                # Received new connection request
+                if sock == self._server_socket:
+                    # Accept the connection and append it to the socket list
+                    self._logger.debug('Received connection request. Establishing connection with client.')
+                    sock_fd, address = self._server_socket.accept()
+                    self._socket_list.append(sock_fd)
+                    
+                    self._logger.debug('Client connected from %s on port %s' % address)
+                # Received message from client
+                else:
+                    # Read message
+                    try:
+                        data_string = sock.recv(self.__read_size)
+                        
+                        # Data available
+                        if data_string:
+                            # Deserialize the message
+                            message = pickle.loads(data_string)
+                            message_enum, num_args, packet_string = message.get_message_contents()
+                            
+                            self._logger.debug('Request from %s on port %s: "%s, %s, %s"', '', '', message_enum, num_args, packet_string)
+                            
+                            # Handle the request
+                            self._server_message.handle_message(message)
+                            
+                            # Respond to client
+                            message = Message(MessageEnum.TURN_OVER, 1, 'Your turn is over!')
+                            data_string = pickle.dumps(message)
+                            sock.sendall(data_string)
+                        # Client disconnected
+                        else:
+                            self._logger.error('Client disconnected.')
+                            self._socket_list.remove(sock)
+                    except:
+                        self._logger.error('Exception occurred while reading data from client.')
+                        continue
         
-        return
-    
-    def handle_request(self):
-        self.logger.debug('handle_request')
-        
-        return SocketServer.TCPServer.handle_request(self)
-    
-    def verify_request(self, request, client_address):
-        self.logger.debug('verify_request(%s, %s)', request, client_address)
-        
-        return SocketServer.TCPServer.verify_request(self, request, client_address)
-    
-    def process_request(self, request, client_address):
-        self.logger.debug('process_request(%s, %s)', request, client_address)
-        
-        return SocketServer.TCPServer.process_request(self, request, client_address)
-    
-    def server_close(self):
-        self.logger.debug('server_close')
-        
-        return SocketServer.TCPServer.server_close(self)
-    
-    def finish_request(self, request, client_address):
-        self.logger.debug('finish_request(%s, %s)', request, client_address)
-        
-        return SocketServer.TCPServer.finish_request(self, request, client_address)
-    
-    def close_request(self, request):
-        self.logger.debug('close_request(%s)', request)
-        
-        return SocketServer.TCPServer.close_request(self, request)
+        self._server_socket.close()
