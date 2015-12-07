@@ -8,7 +8,9 @@ import threading
 
 from common.Message import Message
 from common.MessageEnum import MessageEnum
+
 from server.ServerMessage import ServerMessage
+from server.ServerModel import ServerModel
 
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
@@ -24,6 +26,7 @@ class CluelessServer:
         
         self._logger = logging.getLogger('CluelessServer')
         
+        self._server_model = ServerModel()
         self._server_message = ServerMessage()
     
     def start_server(self):
@@ -53,11 +56,19 @@ class CluelessServer:
                     # Accept the connection and append it to the socket list
                     self._logger.debug('Received connection request. Establishing connection with client.')
                     sock_fd, address = self._server_socket.accept()
+                    self._logger.debug('Client connected from %s on port %s' % address)
+                    
+                    # Add the socket to the socket list
                     self._socket_list.append(sock_fd)
                     
-                    self._logger.debug('Client connected from %s on port %s' % address)
+                    # Add a new player to the server model
+                    self._server_model.add_player(address)
                 # Received message from client
                 else:
+                    # Retrieve the player associated with this socket
+                    #TODO: Remove this step if we do not need any player information at this level
+                    player = self._server_model.get_player(sock._sock.getpeername()[0])
+                    
                     # Read message
                     try:
                         data_string = sock.recv(self.__read_size)
@@ -65,10 +76,10 @@ class CluelessServer:
                         # Data available
                         if data_string:
                             # Deserialize the message
+                            self._logger.debug('Reading data from socket.')
                             message = pickle.loads(data_string)
                             message_enum, num_args, packet_string = message.get_message_contents()
-                            
-                            self._logger.debug('Request from %s: "%s, %s, %s"', socket.gethostbyname(socket.gethostname()), message_enum, num_args, packet_string)
+                            self._logger.debug('Request from %s: "%s, %s, %s"', player.get_ip(), message_enum, num_args, packet_string)
                             
                             # Handle the request
                             self._server_message.handle_message(message)
@@ -82,7 +93,7 @@ class CluelessServer:
                             self._logger.error('Client disconnected.')
                             self.remove_client(sock)
                     except:
-                        self._logger.error('Exception occurred while reading data from %s.', socket.gethostbyname(socket.gethostname()))
+                        self._logger.error('Exception occurred while reading data from %s.', player.get_ip())
                         self.remove_client(sock)
                         
                         continue
@@ -90,4 +101,10 @@ class CluelessServer:
         self._server_socket.close()
     
     def remove_client(self, sock):
+        peername = sock._sock.getpeername()[0]
+        self._logger.debug('Removing the connection to %s.', peername)
+        
         self._socket_list.remove(sock)
+        self._server_model.remove_player(peername)
+        
+        sock.close()
