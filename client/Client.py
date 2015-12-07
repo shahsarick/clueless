@@ -43,7 +43,7 @@ class Client:
         
         self._logger.debug('Connected to %s on port %s', self._host, self._port)
         
-        client_thread = threading.Thread(target=client.run)
+        client_thread = threading.Thread(target=self.run)
         client_thread.start()
     
     def run(self):
@@ -86,14 +86,3 @@ class Client:
         # Send message to server
         data_string = pickle.dumps(message)
         self._output_queue.put(data_string)
-        
-host = '127.0.0.1'
-port = 14415
-
-client = Client(host, port)
-client.initialize()
-
-while True:
-    print 'Waiting for user input.'
-    user_input = sys.stdin.readline().rstrip()
-    client.send_message(user_input)

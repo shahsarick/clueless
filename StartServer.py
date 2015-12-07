@@ -1,9 +1,11 @@
 #!/usr/bin/env python
 
+import socket
+
 from server.CluelessServer import CluelessServer
 
 # Create the server
-host = '127.0.0.1'
+host = socket.gethostbyname(socket.gethostname())
 port = 14415
 server = CluelessServer(host, port)
 

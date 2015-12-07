@@ -14,6 +14,7 @@ logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
 class CluelessServer:
     __connection_backlog = 10
+    __select_timeout = 0.5
     __read_size = 4096
 
     def __init__(self, host, port):
@@ -43,7 +44,7 @@ class CluelessServer:
     
     def run(self):
         while True:
-            ready_to_read, ready_to_write, input_error = select.select(self._socket_list, [], [], 0)
+            ready_to_read, ready_to_write, input_error = select.select(self._socket_list, [], [], self.__select_timeout)
             
             # Loop through list of sockets that have data
             for sock in ready_to_read:
@@ -67,7 +68,7 @@ class CluelessServer:
                             message = pickle.loads(data_string)
                             message_enum, num_args, packet_string = message.get_message_contents()
                             
-                            self._logger.debug('Request from %s on port %s: "%s, %s, %s"', '', '', message_enum, num_args, packet_string)
+                            self._logger.debug('Request from %s: "%s, %s, %s"', socket.gethostbyname(socket.gethostname()), message_enum, num_args, packet_string)
                             
                             # Handle the request
                             self._server_message.handle_message(message)
@@ -79,9 +80,14 @@ class CluelessServer:
                         # Client disconnected
                         else:
                             self._logger.error('Client disconnected.')
-                            self._socket_list.remove(sock)
+                            self.remove_client(sock)
                     except:
-                        self._logger.error('Exception occurred while reading data from client.')
+                        self._logger.error('Exception occurred while reading data from %s.', socket.gethostbyname(socket.gethostname()))
+                        self.remove_client(sock)
+                        
                         continue
         
         self._server_socket.close()
+    
+    def remove_client(self, sock):
+        self._socket_list.remove(sock)
