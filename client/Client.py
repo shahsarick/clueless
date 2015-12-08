@@ -6,9 +6,11 @@ import select
 import socket
 import sys
 import threading
-
+from observer import Observable, Observer, observerObject
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
+# testing
+obsObj = observerObject()
 class Client:
     __socket_timeout = 2
     __select_timeout = 0.5
@@ -79,4 +81,4 @@ class Client:
                 self._client_socket.sendall(data_string)
     
     def notify_client_message(self):
-        pass
+        obsObj.subject.notify_observers()

@@ -4,7 +4,6 @@ import cPickle as pickle
 import logging
 import Queue
 import socket
-
 from client.Client import Client
 
 from common.Message import Message
@@ -22,6 +21,8 @@ class ClientMessage:
         
         self._input_queue = Queue.Queue()
         self._output_queue = Queue.Queue()
+
+        self.i=0
         
         self._client = Client(host, port, self._input_queue, self._output_queue)
     
@@ -40,3 +41,10 @@ class ClientMessage:
         data_string = self._output_queue.get()
         message = pickle.loads(data_string)
         self._logger.debug('Response from server: "%s, %s, %s"' % message.get_message_contents())
+
+    def newMsg(self):
+        print "There is a new message"
+        self.i=self.i +1
+        print self.i
+
+
