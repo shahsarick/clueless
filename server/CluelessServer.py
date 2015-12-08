@@ -26,6 +26,7 @@ class CluelessServer:
         
         self._logger = logging.getLogger('CluelessServer')
         
+        #TODO: Move server model into servermessage (message will perform the processing and update the model)
         self._server_model = ServerModel()
         self._server_message = ServerMessage()
     
@@ -71,6 +72,7 @@ class CluelessServer:
                     
                     # Read message
                     try:
+                        #TODO: Loop to make sure we get all of the data from socket
                         data_string = sock.recv(self.__read_size)
                         
                         # Data available

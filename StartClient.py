@@ -1,17 +1,15 @@
 #!/usr/bin/env python
 
-import socket
 import sys
 
-from client.Client import Client
+from client.ClientMessage import ClientMessage
 
-host = socket.gethostbyname(socket.gethostname())
-port = 14415
 
-client = Client(host, port)
-client.initialize()
+client_message = ClientMessage()
+client_message.start_client()
 
 while True:
     print 'Waiting for user input.'
     user_input = sys.stdin.readline().rstrip()
-    client.send_message(user_input)
+    client_message.send_message(user_input)
+    client_message.receive_message()
