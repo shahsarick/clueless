@@ -1,16 +1,17 @@
 #!/usr/bin/env python
 
 import logging
-import Queue
 import select
 import socket
 import sys
 import threading
-from observer import observerObject
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
-# testing
+from observer.observer import observerObject
+
+
+# reference the subject
 obsObj = observerObject()
+
 class Client:
     __socket_timeout = 2
     __select_timeout = 0.5
@@ -79,6 +80,7 @@ class Client:
                 
                 self._logger.debug('Sending message to server.')
                 self._client_socket.sendall(data_string)
-    
+
+    # only called if there is a message in the queue
     def notify_client_message(self):
         obsObj.subject.notify_observers()

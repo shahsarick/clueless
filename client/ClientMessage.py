@@ -9,7 +9,7 @@ from client.Client import Client
 from common.Message import Message
 from common.MessageEnum import MessageEnum
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
+
 
 class ClientMessage:
     
@@ -42,9 +42,6 @@ class ClientMessage:
         message = pickle.loads(data_string)
         self._logger.debug('Response from server: "%s, %s, %s"' % message.get_message_contents())
 
-    def newMsg(self):
-        print "There is a new message"
-        self.i=self.i +1
-        print self.i
+
 
 
