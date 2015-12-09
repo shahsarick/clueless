@@ -12,8 +12,6 @@ from common.MessageEnum import MessageEnum
 from server.ServerMessage import ServerMessage
 from server.ServerModel import ServerModel
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
-
 class CluelessServer:
     __connection_backlog = 10
     __select_timeout = 0.5

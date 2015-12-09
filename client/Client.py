@@ -1,13 +1,10 @@
 #!/usr/bin/env python
 
 import logging
-import Queue
 import select
 import socket
 import sys
 import threading
-
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
 class Client:
     __socket_timeout = 2
@@ -66,7 +63,9 @@ class Client:
                         self._logger.error('Disconnected from the server.')
                         sys.exit()
             
-            # Check to see if data needs to be sent to the server
+            # Check to see if data is available on the input queue
+            # Note: Normally the queue would be in the select call, but I don't think 
+            #       Queue is implemented as a file descriptor in Python (or Windows sucks)
             if self._input_queue.qsize() > 0:
                 self._logger.debug('Retrieving message from input queue.')
                 
@@ -75,6 +74,7 @@ class Client:
                 except:
                     break
                 
+                # Send message to the server
                 self._logger.debug('Sending message to server.')
                 self._client_socket.sendall(data_string)
     

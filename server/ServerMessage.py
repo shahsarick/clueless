@@ -5,8 +5,6 @@ import logging
 from common.Message import Message
 from common.MessageEnum import MessageEnum
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
-
 class ServerMessage:
 
     def __init__(self):

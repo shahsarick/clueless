@@ -10,11 +10,10 @@ from client.Client import Client
 from common.Message import Message
 from common.MessageEnum import MessageEnum
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
-
 class ClientMessage:
     
     def __init__(self):
+        #TODO: Get IP address from GUI
         host = socket.gethostbyname(socket.gethostname())
         port = 14415
         

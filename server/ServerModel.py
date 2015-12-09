@@ -4,8 +4,6 @@ import logging
 
 from common.Player import Player
 
-logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
-
 class ServerModel:
     
     def __init__(self):
