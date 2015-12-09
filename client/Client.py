@@ -5,12 +5,11 @@ import select
 import socket
 import sys
 import threading
-from observer.observer import observerObject
 
+from observer.observer import observerObject
 
 # reference the subject
 obsObj = observerObject()
-
 
 class Client:
     __socket_timeout = 2

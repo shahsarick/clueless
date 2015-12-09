@@ -4,11 +4,11 @@ import cPickle as pickle
 import logging
 import Queue
 import socket
+
 from client.Client import Client
 
 from common.Message import Message
 from common.MessageEnum import MessageEnum
-
 
 class ClientMessage:
     
@@ -41,7 +41,3 @@ class ClientMessage:
         data_string = self._output_queue.get()
         message = pickle.loads(data_string)
         self._logger.debug('Response from server: "%s, %s, %s"' % message.get_message_contents())
-
-
-
-
