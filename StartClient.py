@@ -6,7 +6,7 @@ import sys
 from client.ClientMessage import ClientMessage
 
 # Setup logger
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s %(name)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)d | %(levelname)s | %(module)s.%(funcName)s : %(message)s', datefmt="%H:%M:%S")
 
 # Create the client
 client_message = ClientMessage()
