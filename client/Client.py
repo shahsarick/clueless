@@ -5,6 +5,12 @@ import select
 import socket
 import sys
 import threading
+from observer.observer import observerObject
+
+
+# reference the subject
+obsObj = observerObject()
+
 
 class Client:
     __socket_timeout = 2
@@ -77,6 +83,7 @@ class Client:
                 # Send message to the server
                 self._logger.debug('Sending message to server.')
                 self._client_socket.sendall(data_string)
-    
+
+    # only called if there is a message in the queue
     def notify_client_message(self):
-        pass
+        obsObj.subject.notify_observers()
