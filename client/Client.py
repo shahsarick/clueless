@@ -6,7 +6,7 @@ import select
 import socket
 import sys
 import threading
-from observer import Observable, Observer, observerObject
+from observer import observerObject
 logging.basicConfig(level=logging.DEBUG, format='%(name)s: %(message)s')
 
 # testing

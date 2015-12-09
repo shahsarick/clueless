@@ -6,7 +6,6 @@ class Observable:
         self.__observers.append(observer)
     def notify_observers(self, *args, **kwargs):
         for observer in self.__observers:
-            print self.__observers
             observer.notify(self, *args, **kwargs)
 
 
@@ -39,3 +38,13 @@ class observerObject(object):
             observerObject.instance = observerObject.__observerObject()
         return observerObject.instance
 
+def callingFunct():
+    print "this is a test!"
+
+obsObj = observerObject()
+observer = Observer(obsObj.subject)
+observer.registerCallback(callingFunct)
+
+observer1 = Observer(obsObj.subject)
+observer1.registerCallback(callingFunct)
+obsObj.subject.notify_observers()
