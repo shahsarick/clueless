@@ -30,3 +30,19 @@ class ServerModel:
         for player in self._player_list:
             if ip == player.get_ip():
                 self._player_list.remove(player)
+    
+    def get_lobby_list(self):
+        self._logger.debug('Retrieving lobby list:')
+        
+        lobby_list = []
+        
+        for player in self._player_list:
+            player_name = player.get_name()
+            ready_state = player.get_ready_status()
+            self._logger.debug('\t(%s, %s)', player_name, ready_state)
+            
+            lobby_entry = [player_name, ready_state]
+            lobby_list.append(lobby_entry)
+        
+        return lobby_list
+            

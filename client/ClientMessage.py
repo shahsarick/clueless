@@ -39,8 +39,6 @@ class ClientMessage:
         client_thread.start()
     
     def send_message(self, message):
-        self._logger.debug('Sending data: "%s, %s, %s"' % message.get_message_contents())
-        
         # Send message to server
         data_string = pickle.dumps(message)
         self._input_queue.put(data_string)
@@ -49,9 +47,8 @@ class ClientMessage:
         data_string = self._output_queue.get()
         message = pickle.loads(data_string)
         
-        self._logger.debug('Message from server: "%s, %s, %s"' % message.get_message_contents())
-        
         message_enum = message.get_message_enum()
+        num_args = message.get_num_args()
         message_args = message.get_args()
         
         if message_enum == MessageEnum.MOVE:
@@ -62,18 +59,20 @@ class ClientMessage:
             
         elif message_enum == MessageEnum.ACCUSE:
             self._logger.debug('Received an accusation message.')
+        
+        # Refresh the lobby with the updated list of player names and ready states
+        # This keeps the lobby in sync in case someone leaves and provides the entire lobby list to new players
+        elif message_enum == MessageEnum.LOBBY_ADD or message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
+            lobby_list = message_args
             
-        elif message_enum == MessageEnum.LOBBY_ADD:
-            player_name = message_args[0]
+            self._logger.debug('Printing lobby list:')
             
-            self._logger.debug('Adding "%s" to lobby.', player_name)
-            
-        elif message_enum == MessageEnum.LOBBY_READY:
-            self._logger.debug('Received a lobby ready message.')
-            
-        elif message_enum == MessageEnum.LOBBY_UNREADY:
-            self._logger.debug('Received a lobby unready message.')
-            
+            for lobby_entry in lobby_list:
+                player_name = lobby_entry[0]
+                ready_state = lobby_entry[1]
+                
+                self._logger.debug('\t(%s, %s).', player_name, ready_state)
+        
         elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
             self._logger.debug('Received a lobby change player message.')
             

@@ -4,6 +4,8 @@ class Player:
 
     def __init__(self, address):
         self._address = address
+        
+        self._ready_state = False
     
     def get_ip(self):
         return self._address[0]
@@ -19,3 +21,9 @@ class Player:
     
     def set_name(self, player_name):
         self._player_name = player_name
+    
+    def get_ready_status(self):
+        return self._ready_state
+    
+    def set_ready_status(self, ready_state):
+        self._ready_state = ready_state

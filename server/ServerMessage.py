@@ -28,22 +28,28 @@ class ServerMessage:
             self._logger.debug('Received an accusation message.')
             
         elif message_enum == MessageEnum.LOBBY_ADD:
+            # Set player name in player entry
             player_name = message_args[0]
-            
             self._logger.debug('Adding "%s" to lobby.', player_name)
-            
             player.set_name(player_name)
             
-            response_args = [player_name]
+            # Return player names and ready states
+            response_args = self._server_model.get_lobby_list()
             return_message = Message(MessageEnum.LOBBY_ADD, 1, response_args)
             
             return (True, return_message)
             
-        elif message_enum == MessageEnum.LOBBY_READY:
-            self._logger.debug('Received a lobby ready message.')
+        elif message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
+            # Set player ready status in player entry
+            ready_status = message_args[0]
+            self._logger.debug('Setting ready status for "%s" to %d.', player.get_name(), ready_status)
+            player.set_ready_status(ready_status)
             
-        elif message_enum == MessageEnum.LOBBY_UNREADY:
-            self._logger.debug('Received a lobby unready message.')
+            # Return player names and ready states
+            response_args = self._server_model.get_lobby_list()
+            return_message = Message(message_enum, 1, response_args)
+                        
+            return (True, return_message)
             
         elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
             self._logger.debug('Received a lobby change player message.')
