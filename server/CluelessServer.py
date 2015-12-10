@@ -10,7 +10,6 @@ from common.Message import Message
 from common.MessageEnum import MessageEnum
 
 from server.ServerMessage import ServerMessage
-from server.ServerModel import ServerModel
 
 class CluelessServer:
     __connection_backlog = 10
@@ -24,8 +23,6 @@ class CluelessServer:
         
         self._logger = logging.getLogger('CluelessServer')
         
-        #TODO: Move server model into servermessage (message will perform the processing and update the model)
-        self._server_model = ServerModel()
         self._server_message = ServerMessage()
     
     def start_server(self):
@@ -55,18 +52,25 @@ class CluelessServer:
                     # Accept the connection and append it to the socket list
                     self._logger.debug('Received connection request. Establishing connection with client.')
                     sock_fd, address = self._server_socket.accept()
-                    self._logger.debug('Client connected from %s on port %s' % address)
                     
-                    # Add the socket to the socket list
-                    self._socket_list.append(sock_fd)
-                    
-                    # Add a new player to the server model
-                    self._server_model.add_player(address)
+                    # Check the number of players currently connected to the server
+                    if len(self._socket_list) < 7:
+                        self._logger.debug('Client connected from %s on port %s' % address)
+                        
+                        # Add the socket to the socket list
+                        self._socket_list.append(sock_fd)
+                        
+                        # Add a new player to the server model
+                        self._server_message.add_player(address)
+                    # Game is full
+                    else:
+                        self._logger.debug('Closed connection with %s on port %s' % address)
+                        
+                        sock_fd.close()
                 # Received message from client
                 else:
                     # Retrieve the player associated with this socket
-                    #TODO: Remove this step if we do not need any player information at this level
-                    player = self._server_model.get_player(sock._sock.getpeername()[0])
+                    player = self._server_message.get_player(sock._sock.getpeername()[0])
                     
                     # Read message
                     try:
@@ -75,19 +79,18 @@ class CluelessServer:
                         
                         # Data available
                         if data_string:
+                            self._logger.debug('Received message from %s.', player.get_ip())
+                            
                             # Deserialize the message
-                            self._logger.debug('Reading data from socket.')
                             message = pickle.loads(data_string)
-                            message_enum, num_args, packet_string = message.get_message_contents()
-                            self._logger.debug('Request from %s: "%s, %s, %s"', player.get_ip(), message_enum, num_args, packet_string)
                             
                             # Handle the request
-                            self._server_message.handle_message(message)
+                            broadcast, response = self._server_message.handle_message(message, player)
                             
-                            # Respond to client
-                            message = Message(MessageEnum.TURN_OVER, 1, 'Your turn is over!')
-                            data_string = pickle.dumps(message)
-                            sock.sendall(data_string)
+                            # Send a response to the client(s)
+                            self._logger.debug('Sending message to client(s).')
+                            
+                            self.send_message(broadcast, sock, response)
                         # Client disconnected
                         else:
                             self._logger.error('Client disconnected.')
@@ -100,11 +103,22 @@ class CluelessServer:
         
         self._server_socket.close()
     
+    def send_message(self, broadcast, sock, response):
+        data_string = pickle.dumps(response)
+        
+        if broadcast == True:
+            for client_socket in self._socket_list:
+                #TODO: Should broadcast skip sending a message to the player who initiated the action?
+                if client_socket != self._server_socket:
+                    client_socket.sendall(data_string)
+        else:
+            sock.sendall(data_string)
+    
     def remove_client(self, sock):
         peername = sock._sock.getpeername()[0]
         self._logger.debug('Removing the connection to %s.', peername)
         
         self._socket_list.remove(sock)
-        self._server_model.remove_player(peername)
+        self._server_message.remove_player(peername)
         
         sock.close()

@@ -4,7 +4,6 @@ import logging
 import select
 import socket
 import sys
-import threading
 
 from observer.observer import observerObject
 
@@ -16,16 +15,13 @@ class Client:
     __select_timeout = 0.5
     __read_size = 4096
     
-    def __init__(self, host, port, input_queue, send_queue):
-        self._host = host
-        self._port = port
-        
+    def __init__(self, input_queue, send_queue):
         self._logger = logging.getLogger('Client')
         
         self._input_queue = input_queue
         self._output_queue = send_queue
     
-    def initialize(self):
+    def connect_to_server(self, host, port):
         # Create the client socket
         self._logger.debug('Creating client socket.')
         self._client_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -35,15 +31,15 @@ class Client:
         self._logger.debug('Attempting to connect to server.')
         
         try:
-            self._client_socket.connect((self._host, self._port))
+            self._client_socket.connect((host, port))
         except:
-            self._logger.error('Unable to connect to server.')
-            sys.exit()
+            self._logger.error('Unable to connect to the server.')
+            
+            return False
         
-        self._logger.debug('Connected to %s on port %s', self._host, self._port)
+        self._logger.debug('Connected to %s on port %s', host, port)
         
-        client_thread = threading.Thread(target=self.run)
-        client_thread.start()
+        return True
     
     def run(self):
         while True:

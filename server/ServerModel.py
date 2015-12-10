@@ -18,7 +18,7 @@ class ServerModel:
         self._player_list.append(new_player)
     
     def get_player(self, ip):
-        self._logger.debug('Retrieving %s from player list.', ip)
+        self._logger.debug('Retrieving player mapped to %s.', ip)
         
         for player in self._player_list:
             if ip == player.get_ip():

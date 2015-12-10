@@ -13,3 +13,9 @@ class Player:
     
     def set_player_enum(self, player_enum):
         self._player_enum = player_enum
+    
+    def get_name(self):
+        return self._player_name
+    
+    def set_name(self, player_name):
+        self._player_name = player_name
