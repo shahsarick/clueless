@@ -6,9 +6,6 @@ import select
 import socket
 import threading
 
-from common.Message import Message
-from common.MessageEnum import MessageEnum
-
 from server.ServerMessage import ServerMessage
 
 class CluelessServer:

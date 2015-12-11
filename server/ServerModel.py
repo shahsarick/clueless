@@ -2,6 +2,7 @@
 
 import logging
 
+from common.Gameboard import Gameboard
 from common.Player import Player
 from common.PlayerEnum import PlayerEnum
 
@@ -21,6 +22,9 @@ class ServerModel:
         self._player_positions = []
         self._card_locations = []
         self._weapon_locations = []
+        
+        self._gameboard = Gameboard()
+        self._gameboard.setup_rooms()
         
         self._turn_order = []
     
