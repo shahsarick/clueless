@@ -64,12 +64,12 @@ while True:
 
     if playerInput == "lobby add":
         add_lobby()
-        sleep(2)
+        sleep(3)
     elif playerInput == "lobby ready":
         lobby_ready()
-        sleep(2)
+        sleep(3)
     elif playerInput == "lobby unready":
         lobby_unready()
-        sleep(2)
+        sleep(3)
     else:
         print "command not recognized"
