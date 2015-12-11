@@ -2,13 +2,15 @@
 
 class Player:
 
-    def __init__(self, address):
+    def __init__(self, address, player_enum):
         self._address = address
+        self._player_enum = player_enum
         
+        self._player_name = ''
         self._ready_state = False
     
-    def get_ip(self):
-        return self._address[0]
+    def get_address(self):
+        return self._address
     
     def get_player_enum(self):
         return self._player_enum

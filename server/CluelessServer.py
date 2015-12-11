@@ -70,7 +70,8 @@ class CluelessServer:
                 # Received message from client
                 else:
                     # Retrieve the player associated with this socket
-                    player = self._server_message.get_player(sock._sock.getpeername()[0])
+                    address = sock._sock.getpeername()
+                    player = self._server_message.get_player(address)
                     
                     # Read message
                     try:
@@ -79,7 +80,7 @@ class CluelessServer:
                         
                         # Data available
                         if data_string:
-                            self._logger.debug('Received message from %s.', player.get_ip())
+                            self._logger.debug('Received message from (%s, %s).' % address)
                             
                             # Deserialize the message
                             message = pickle.loads(data_string)
@@ -96,7 +97,7 @@ class CluelessServer:
                             self._logger.error('Client disconnected.')
                             self.remove_client(sock)
                     except:
-                        self._logger.error('Exception occurred while reading data from %s.', player.get_ip())
+                        self._logger.error('Exception occurred while reading data from (%s, %s).' % address)
                         self.remove_client(sock)
                         
                         continue
@@ -115,10 +116,10 @@ class CluelessServer:
             sock.sendall(data_string)
     
     def remove_client(self, sock):
-        peername = sock._sock.getpeername()[0]
-        self._logger.debug('Removing the connection to %s.', peername)
+        address = sock._sock.getpeername()
+        self._logger.debug('Removing the connection to (%s, %s).' % address)
         
         self._socket_list.remove(sock)
-        self._server_message.remove_player(peername)
+        self._server_message.remove_player(address)
         
         sock.close()

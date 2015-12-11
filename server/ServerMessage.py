@@ -69,8 +69,8 @@ class ServerMessage:
     def add_player(self, address):
         self._server_model.add_player(address)
     
-    def get_player(self, peername):
-        return self._server_model.get_player(peername)
+    def get_player(self, address):
+        return self._server_model.get_player(address)
     
-    def remove_player(self, peername):
-        self._server_model.remove_player(peername)
+    def remove_player(self, address):
+        self._server_model.remove_player(address)
