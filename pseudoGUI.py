@@ -12,6 +12,46 @@ from time import sleep
 
 #TODO: Move all relevant code to GUI
 
+# GUI methods
+def prompt_username():
+    print 'Please enter your username'
+    username = sys.stdin.readline().rstrip()
+    
+    return username
+
+def prompt_move():
+    print 'Please enter a room number to move to (see RoomEnum.py)'
+    
+    try:
+        room = int(sys.stdin.readline().rstrip())
+        return room
+    except ValueError:
+        return -1
+
+def add_lobby():
+    username = prompt_username()
+    message_args = [username]
+    message = Message(MessageEnum.LOBBY_ADD, 1, message_args)
+    client_message.send_message(message)
+
+def lobby_ready():
+    message = Message(MessageEnum.LOBBY_READY, 1, [True])
+    client_message.send_message(message)
+
+def lobby_unready():
+    message = Message(MessageEnum.LOBBY_UNREADY, 1, [False])
+    client_message.send_message(message)
+
+def move():
+    room = prompt_move()
+    
+    if room != -1:
+        message_args = [room]
+        message = Message(MessageEnum.MOVE, 1, message_args)
+        client_message.send_message(message)
+    else:
+        print 'Invalid room number'
+
 # Setup logger
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)d | %(levelname)s | %(module)s.%(funcName)s : %(message)s', datefmt="%H:%M:%S")
 
@@ -30,46 +70,25 @@ if connected == True:
     observer.registerCallback(client_message.handle_message)
 else:
     print 'Failed to connect with server.'
+
 sleep(2)
-
-
-
-message_args = None
-# GUI methods
-def promptUserName():
-    print 'Please enter your username'
-    username = sys.stdin.readline().rstrip()
-    global message_args
-    message_args = [username]
-    return [username]
-
-def add_lobby():
-    message_args = promptUserName()
-    message = Message(MessageEnum.LOBBY_ADD, 1, message_args)
-    client_message.send_message(message)
-
-def lobby_ready():
-    message = Message(MessageEnum.LOBBY_READY, 1, [True])
-    client_message.send_message(message)
-
-def lobby_unready():
-    message = Message(MessageEnum.LOBBY_UNREADY, 1, [False])
-    client_message.send_message(message)
-
 
 #loop to simulate GUI actions
 while True:
     print "Enter a command: "
-    playerInput = sys.stdin.readline().rstrip()
+    player_input = sys.stdin.readline().rstrip()
 
-    if playerInput == "lobby add":
+    if player_input == "lobby add":
         add_lobby()
         sleep(3)
-    elif playerInput == "lobby ready":
+    elif player_input == "lobby ready":
         lobby_ready()
         sleep(3)
-    elif playerInput == "lobby unready":
+    elif player_input == "lobby unready":
         lobby_unready()
+        sleep(3)
+    elif player_input == 'move':
+        move()
         sleep(3)
     else:
         print "command not recognized"

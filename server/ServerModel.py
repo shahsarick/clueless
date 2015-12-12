@@ -5,6 +5,7 @@ import logging
 from common.Gameboard import Gameboard
 from common.Player import Player
 from common.PlayerEnum import PlayerEnum
+from common.RoomEnum import RoomEnum
 
 class ServerModel:
     
@@ -19,9 +20,14 @@ class ServerModel:
                                 PlayerEnum.MRS_PEACOCK : False}
         self._player_list = []
         
-        self._player_positions = []
-        self._card_locations = []
-        self._weapon_locations = []
+        self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
+                                  PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
+                                  PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY, \
+                                  PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY, \
+                                  PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
+                                  PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
+        self._card_locations = {}
+        self._weapon_locations = {}
         
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
@@ -38,7 +44,10 @@ class ServerModel:
                 
                 break
         
-        self._logger.debug('Adding (%s, %s) as player_enum %s to player list.', address[0], address[1], new_player.get_player_enum())
+        player_enum = new_player.get_player_enum()
+        player_enum_str = PlayerEnum.to_string(player_enum)
+        
+        self._logger.debug('Adding (%s, %s) as %s to player list.', address[0], address[1], player_enum_str)
         self._player_list.append(new_player)
     
     # Get the player with the associated address
@@ -75,6 +84,22 @@ class ServerModel:
         else:
             return False
     
+    # Attempt to move the player to the destination room
+    def perform_move(self, player_enum, destination_room):
+        current_room = self._player_positions[player_enum]
+        
+        player_enum_str = PlayerEnum.to_string(player_enum)
+        current_room_str = RoomEnum.to_string(current_room)
+        destination_room_str = RoomEnum.to_string(destination_room)
+        self._logger.debug('Attempting to move %s from "%s" to "%s" .', player_enum_str, current_room_str, destination_room_str)
+        
+        valid_move = self._gameboard.is_valid_move(current_room, destination_room)
+        
+        if valid_move == True:
+            self._player_positions[player_enum] = destination_room
+        
+        return valid_move
+    
     # Get the list of players in the lobby and their associated ready status
     def get_lobby_list(self):
         self._logger.debug('Retrieving lobby list:')
@@ -90,4 +115,9 @@ class ServerModel:
             lobby_list.append(lobby_entry)
         
         return lobby_list
+    
+    def get_player_position(self, player_enum):
+        current_room = self._player_positions[player_enum]
+        
+        return current_room
             

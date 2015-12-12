@@ -7,8 +7,9 @@ import threading
 
 from client.Client import Client
 
-from common.Message import Message
 from common.MessageEnum import MessageEnum
+from common.PlayerEnum import PlayerEnum
+from common.RoomEnum import RoomEnum
 
 class ClientMessage:
     
@@ -52,7 +53,17 @@ class ClientMessage:
         message_args = message.get_args()
         
         if message_enum == MessageEnum.MOVE:
-            self._logger.debug('Received a move message.')
+            if len(message_args) > 1:
+                old_room = message_args[0]
+                player_enum = message_args[1]
+                new_room = message_args[2]
+                
+                old_room_str = RoomEnum.to_string(old_room)
+                player_enum_str = PlayerEnum.to_string(player_enum)
+                new_room_str = RoomEnum.to_string(new_room)
+                self._logger.debug('%s moved from "%s" to "%s".', player_enum_str, old_room_str, new_room_str)
+            else:
+                self._logger.debug('Invalid move!')
             
         elif message_enum == MessageEnum.SUGGEST:
             self._logger.debug('Received a suggest message.')

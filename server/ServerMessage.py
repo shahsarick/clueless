@@ -19,7 +19,24 @@ class ServerMessage:
         message_args = message.get_args()
         
         if message_enum == MessageEnum.MOVE:
-            self._logger.debug('Received a move message.')
+            player_enum = player.get_player_enum()
+            current_room = self._server_model.get_player_position(player_enum)
+            destination_room = message_args[0]
+            
+            valid_move = self._server_model.perform_move(player_enum, destination_room)
+            
+            broadcast = True
+            
+            if valid_move == True:
+                new_room = self._server_model.get_player_position(player_enum)
+                response_args = [current_room, player_enum, new_room]
+            else:
+                response_args = [False]
+                broadcast = False
+            
+            return_message = Message(MessageEnum.MOVE, 1, response_args)
+            
+            return (broadcast, return_message)
             
         elif message_enum == MessageEnum.SUGGEST:
             self._logger.debug('Received a suggest message.')

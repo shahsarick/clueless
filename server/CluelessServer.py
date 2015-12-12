@@ -77,6 +77,7 @@ class CluelessServer:
                         
                         # Data available
                         if data_string:
+                            #TODO: Remove this debug statement?
                             self._logger.debug('Received message from (%s, %s).' % address)
                             
                             # Deserialize the message
