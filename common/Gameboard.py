@@ -116,3 +116,9 @@ class Gameboard:
         valid_room_list = room.get_valid_moves()
         
         return valid_room_list
+    
+    def is_hallway(self, room):
+        if room > 9:
+            return True
+        else:
+            return False

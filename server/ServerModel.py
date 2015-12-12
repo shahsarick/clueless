@@ -6,6 +6,7 @@ from common.Gameboard import Gameboard
 from common.Player import Player
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
+from common.WeaponEnum import WeaponEnum
 
 class ServerModel:
     
@@ -27,7 +28,12 @@ class ServerModel:
                                   PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
                                   PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
         self._card_locations = {}
-        self._weapon_locations = {}
+        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, \
+                                  WeaponEnum.ROPE : RoomEnum.BALLROOM, \
+                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL, \
+                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM, \
+                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, \
+                                  WeaponEnum.KNIFE : RoomEnum.KITCHEN}
         
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
@@ -93,8 +99,19 @@ class ServerModel:
         destination_room_str = RoomEnum.to_string(destination_room)
         self._logger.debug('Attempting to move %s from "%s" to "%s".', player_enum_str, current_room_str, destination_room_str)
         
+        # Check to see if the move is valid on the gameboard
         valid_move = self._gameboard.is_valid_move(current_room, destination_room)
         
+        # Check to see if the destination is a hallway
+        if self._gameboard.is_hallway(destination_room) == True:
+            # Check to see if a player is already in this hallway
+            for player_position, player_location in self._player_positions.items():
+                if destination_room == player_location:
+                    valid_move = False
+                    
+                    break
+        
+        # Update the player position if the move is valid
         if valid_move == True:
             self._player_positions[player_enum] = destination_room
         

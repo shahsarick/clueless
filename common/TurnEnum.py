@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 
 class TurnEnum(object):
-    MOVE = 0
-    SUGGEST = 1
-    DISPROVE = 2
+    MOVE = 1
+    SUGGEST = 2
+    DISPROVE = 3
