@@ -4,7 +4,7 @@ import logging
 import select
 import socket
 import sys
-
+import time
 from observer.observer import observerObject
 
 # reference the subject
@@ -51,9 +51,30 @@ class Client:
             for fd in ready_to_read:
                 # Received message from server
                 if fd == self._client_socket:
-                    #TODO: Loop to make sure we get all of the data from socket
-                    data_string = self._client_socket.recv(self.__read_size)
-                    
+
+                    # This should ensure all the data from the socket is received
+                    total_data = []
+                    begin = time.time()
+                    # same as while True but faster
+                    while 1:
+                        # you have data and timeout has occured since getting data
+                        if total_data and time.time()-begin > self.__select_timeout:
+                            break
+                        # wait longer if no data received
+                        elif time.time()-begin > self.__select_timeout * 2:
+                            break
+
+                        try:
+                            data_string = self._client_socket.recv(self.__read_size)
+                            if data_string:
+                                total_data.append(data_string)
+                                begin = time.time()
+                            else:
+                                time.sleep(0.1)
+                        except:
+                            pass
+                    data_string = ''.join(total_data)
+
                     # Data available
                     if data_string:
                         # Place the server message into the output queue and notify the client that data has been received
