@@ -11,12 +11,12 @@ class ServerModel:
     def __init__(self):
         self._logger = logging.getLogger('ServerModel')
         
-        self._character_list = [[PlayerEnum.MISS_SCARLET, False], \
-                                [PlayerEnum.COLONEL_MUSTARD, False], \
-                                [PlayerEnum.PROFESSOR_PLUM, False], \
-                                [PlayerEnum.MR_GREEN, False], \
-                                [PlayerEnum.MRS_WHITE, False], \
-                                [PlayerEnum.MRS_PEACOCK, False]]
+        self._character_list = {PlayerEnum.MISS_SCARLET : False, \
+                                PlayerEnum.COLONEL_MUSTARD : False, \
+                                PlayerEnum.PROFESSOR_PLUM : False, \
+                                PlayerEnum.MR_GREEN : False, \
+                                PlayerEnum.MRS_WHITE : False, \
+                                PlayerEnum.MRS_PEACOCK : False}
         self._player_list = []
         
         self._player_positions = []
@@ -31,12 +31,9 @@ class ServerModel:
     # Add a player to the player list using the given address
     def add_player(self, address):
         # Assign an available player_enum from the character list to the new player
-        for i in range(len(self._character_list)):
-            player_enum = self._character_list[i][0]
-            chosen = self._character_list[i][1]
-            
-            if chosen == False:
-                self._character_list[i][1] = True
+        for player_enum in self._character_list:
+            if self._character_list[player_enum] == False:
+                self._character_list[player_enum] = True
                 new_player = Player(address, player_enum)
                 
                 break
@@ -64,12 +61,7 @@ class ServerModel:
             if self.compare_addresses(address, player_address) == True:
                 # Make the player_enum in the character list available to be used by someone else
                 player_enum = player.get_player_enum()
-                
-                for i in range(len(self._character_list)):
-                    if player_enum == self._character_list[i][0]:
-                        self._character_list[i][1] = False
-                        
-                        break
+                self._character_list[player_enum] = False
                 
                 # Remove the player from the player list
                 self._player_list.remove(player)
