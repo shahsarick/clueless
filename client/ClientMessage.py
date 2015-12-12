@@ -53,10 +53,12 @@ class ClientMessage:
         message_args = message.get_args()
         
         if message_enum == MessageEnum.MOVE:
-            if len(message_args) > 1:
-                old_room = message_args[0]
+            valid_move = message_args[0]
+            
+            if valid_move == True:
                 player_enum = message_args[1]
-                new_room = message_args[2]
+                old_room = message_args[2]
+                new_room = message_args[3]
                 
                 old_room_str = RoomEnum.to_string(old_room)
                 player_enum_str = PlayerEnum.to_string(player_enum)

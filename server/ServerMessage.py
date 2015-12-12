@@ -29,7 +29,7 @@ class ServerMessage:
             
             if valid_move == True:
                 new_room = self._server_model.get_player_position(player_enum)
-                response_args = [current_room, player_enum, new_room]
+                response_args = [True, player_enum, current_room, new_room]
             else:
                 response_args = [False]
                 broadcast = False

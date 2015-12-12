@@ -91,7 +91,7 @@ class ServerModel:
         player_enum_str = PlayerEnum.to_string(player_enum)
         current_room_str = RoomEnum.to_string(current_room)
         destination_room_str = RoomEnum.to_string(destination_room)
-        self._logger.debug('Attempting to move %s from "%s" to "%s" .', player_enum_str, current_room_str, destination_room_str)
+        self._logger.debug('Attempting to move %s from "%s" to "%s".', player_enum_str, current_room_str, destination_room_str)
         
         valid_move = self._gameboard.is_valid_move(current_room, destination_room)
         
