@@ -13,12 +13,6 @@ from time import sleep
 #TODO: Move all relevant code to GUI
 
 # GUI methods
-def prompt_username():
-    print 'Please enter your username'
-    username = sys.stdin.readline().rstrip()
-    
-    return username
-
 def prompt_move():
     print 'Please enter a room number to move to (see RoomEnum.py)'
     
@@ -27,12 +21,6 @@ def prompt_move():
         return room
     except ValueError:
         return -1
-
-def add_lobby():
-    username = prompt_username()
-    message_args = [username]
-    message = Message(MessageEnum.LOBBY_ADD, 1, message_args)
-    client_message.send_message(message)
 
 def lobby_ready():
     message = Message(MessageEnum.LOBBY_READY, 1, [True])
@@ -78,10 +66,7 @@ while True:
     print "Enter a command: "
     player_input = sys.stdin.readline().rstrip()
 
-    if player_input == "lobby add":
-        add_lobby()
-        sleep(3)
-    elif player_input == "lobby ready":
+    if player_input == "lobby ready":
         lobby_ready()
         sleep(3)
     elif player_input == "lobby unready":

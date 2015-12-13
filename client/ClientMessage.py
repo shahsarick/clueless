@@ -6,6 +6,7 @@ import Queue
 import threading
 
 from client.Client import Client
+from client.ClientModel import ClientModel
 
 from common.MessageEnum import MessageEnum
 from common.PlayerEnum import PlayerEnum
@@ -22,8 +23,11 @@ class ClientMessage:
         self.i = 0
         
         self._client = Client(self._input_queue, self._output_queue)
+        self._client_model = ClientModel()
     
+    # Connects to the server
     def connect_to_server(self, host, port):
+        #TODO: May need to move connect_to_server into worker thread to prevent server messages coming back before we're ready for them
         connected = self._client.connect_to_server(host, port)
         
         if connected == True:
@@ -33,17 +37,20 @@ class ClientMessage:
         else:
             return False
     
+    # Starts the client communication thread
     def start_client(self):
         self._logger.debug('Starting client communication thread.')
         
         client_thread = threading.Thread(target=self._client.run)
         client_thread.start()
     
+    # Send a message to the server
     def send_message(self, message):
         # Send message to server
         data_string = pickle.dumps(message)
         self._input_queue.put(data_string)
     
+    # Handle the messages sent by the server
     def handle_message(self):
         data_string = self._output_queue.get()
         message = pickle.loads(data_string)
@@ -52,6 +59,7 @@ class ClientMessage:
         num_args = message.get_num_args()
         message_args = message.get_args()
         
+        # Handle move messages
         if message_enum == MessageEnum.MOVE:
             valid_move = message_args[0]
             
@@ -66,16 +74,19 @@ class ClientMessage:
                 self._logger.debug('%s moved from "%s" to "%s".', player_enum_str, old_room_str, new_room_str)
             else:
                 self._logger.debug('Invalid move!')
-            
+        
+        # Handle suggest messages
         elif message_enum == MessageEnum.SUGGEST:
             self._logger.debug('Received a suggest message.')
-            
+        
+        # Handle accuse message
         elif message_enum == MessageEnum.ACCUSE:
             self._logger.debug('Received an accusation message.')
         
-        # Refresh the lobby with the updated list of player names and ready states
-        # This keeps the lobby in sync in case someone leaves and provides the entire lobby list to new players
+        # Handle lobby ready and unready messages
         elif message_enum == MessageEnum.LOBBY_ADD or message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
+            # Refresh the lobby with the updated list of player names and ready states
+            # This keeps the lobby in sync in case someone leaves and provides the entire lobby list to new players
             lobby_list = message_args
             
             self._logger.debug('Printing lobby list:')
@@ -86,17 +97,26 @@ class ClientMessage:
                 
                 self._logger.debug('\t(%s, %s).', player_name, ready_state)
         
+        # Handle lobby change player message
         elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
-            self._logger.debug('Received a lobby change player message.')
+            player_enum = message_args[0]
             
+            self._logger.debug('You have been assigned the character "%s".', PlayerEnum.to_string(player_enum))
+            
+            self._client_model.set_player_enum(player_enum)
+        
+        # Handle game state change message
         elif message_enum == MessageEnum.GAME_STATE_CHANGE:
             self._logger.debug('Received a game state change message.')
-            
+        
+        # Handle turn over message
         elif message_enum == MessageEnum.TURN_OVER:
             self._logger.debug('Received a turn over message.')
-            
+        
+        # Handle turn begin message
         elif message_enum == MessageEnum.TURN_BEGIN:
             self._logger.debug('Received a turn begin message.')
-            
+        
+        # Handle error message
         elif message_enum == MessageEnum.ERROR:
             self._logger.debug('Received an error message.')

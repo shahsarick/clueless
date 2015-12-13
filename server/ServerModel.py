@@ -1,11 +1,13 @@
 #!/usr/bin/env python
 
 import logging
+from random import randint
 
 from common.Gameboard import Gameboard
 from common.Player import Player
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
+from common.TurnEnum import TurnEnum
 from common.WeaponEnum import WeaponEnum
 
 class ServerModel:
@@ -13,6 +15,7 @@ class ServerModel:
     def __init__(self):
         self._logger = logging.getLogger('ServerModel')
         
+        # Create character dictionary and player list for lobby and socket use
         self._character_list = {PlayerEnum.MISS_SCARLET : False, \
                                 PlayerEnum.COLONEL_MUSTARD : False, \
                                 PlayerEnum.PROFESSOR_PLUM : False, \
@@ -21,13 +24,14 @@ class ServerModel:
                                 PlayerEnum.MRS_PEACOCK : False}
         self._player_list = []
         
+        # Set card locations
         self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
                                   PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
                                   PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY, \
                                   PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY, \
                                   PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
                                   PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
-        self._card_locations = {}
+        
         self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, \
                                   WeaponEnum.ROPE : RoomEnum.BALLROOM, \
                                   WeaponEnum.LEAD_PIPE : RoomEnum.HALL, \
@@ -35,10 +39,27 @@ class ServerModel:
                                   WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, \
                                   WeaponEnum.KNIFE : RoomEnum.KITCHEN}
         
+        # Set turn order
+        self._turn_order = [PlayerEnum.MISS_SCARLET, 
+                            PlayerEnum.COLONEL_MUSTARD, 
+                            PlayerEnum.MRS_WHITE, 
+                            PlayerEnum.MR_GREEN, 
+                            PlayerEnum.MRS_PEACOCK, 
+                            PlayerEnum.PROFESSOR_PLUM]
+        self._turn_state = TurnEnum.MOVE
+        
+        # Create gameboard
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
         
-        self._turn_order = []
+        # Fill envelope with suspect, weapon, and room
+        suspect = randint(1, 6)
+        weapon = randint(1, 6)
+        room = randint(1, 9)
+        
+        self._envelope = [suspect, weapon, room]
+        
+        self._game_started = False
     
     # Add a player to the player list using the given address
     def add_player(self, address):
@@ -50,6 +71,7 @@ class ServerModel:
                 
                 break
         
+        # Add the new player to the player list
         player_enum = new_player.get_player_enum()
         player_enum_str = PlayerEnum.to_string(player_enum)
         
@@ -102,9 +124,8 @@ class ServerModel:
         # Check to see if the move is valid on the gameboard
         valid_move = self._gameboard.is_valid_move(current_room, destination_room)
         
-        # Check to see if the destination is a hallway
+        # Check to see if the destination is an occupied hallway
         if self._gameboard.is_hallway(destination_room) == True:
-            # Check to see if a player is already in this hallway
             for player_position, player_location in self._player_positions.items():
                 if destination_room == player_location:
                     valid_move = False
@@ -133,8 +154,30 @@ class ServerModel:
         
         return lobby_list
     
+    # Get the position for the specified player_enum
     def get_player_position(self, player_enum):
         current_room = self._player_positions[player_enum]
         
         return current_room
+    
+    # Check to see if the game is ready to start
+    def is_game_ready(self):
+        self._logger.debug('Checking to see if the game is ready to start.')
+        
+        # Check to make sure the minimum number of players are in the game
+        if len(self._player_list) < 2:
+            return False
+        
+        # Check to see if everyone in the game is ready
+        for player in self._player_list:
+            if player.get_ready_status() == False:
+                return False
+        
+        self._game_started = True
+        
+        return True
+    
+    # Check to see if the game has started
+    def is_game_started(self):
+        return self._game_started
             

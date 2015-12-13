@@ -21,6 +21,7 @@ class Client:
         self._input_queue = input_queue
         self._output_queue = send_queue
     
+    # Connect to the server
     def connect_to_server(self, host, port):
         # Create the client socket
         self._logger.debug('Creating client socket.')

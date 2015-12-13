@@ -2,6 +2,7 @@
 
 import cPickle as pickle
 import logging
+import Queue
 import select
 import socket
 import threading
@@ -20,8 +21,11 @@ class CluelessServer:
         
         self._logger = logging.getLogger('CluelessServer')
         
-        self._server_message = ServerMessage()
+        self._output_queue = Queue.Queue()
+        
+        self._server_message = ServerMessage(self._output_queue)
     
+    # Starts the server
     def start_server(self):
         # Create the server socket
         self._logger.debug('Creating server socket.')
@@ -48,22 +52,25 @@ class CluelessServer:
                 if sock == self._server_socket:
                     # Accept the connection and append it to the socket list
                     self._logger.debug('Received connection request. Establishing connection with client.')
-                    sock_fd, address = self._server_socket.accept()
+                    new_sock, address = self._server_socket.accept()
                     
                     # Check the number of players currently connected to the server
                     if len(self._socket_list) < 7:
                         self._logger.debug('Client connected from %s on port %s' % address)
                         
                         # Add the socket to the socket list
-                        self._socket_list.append(sock_fd)
+                        self._socket_list.append(new_sock)
                         
                         # Add a new player to the server model
                         self._server_message.add_player(address)
+                        
+                        # Send all messages in the output queue
+                        self.send_all_messages(new_sock)
                     # Game is full
                     else:
                         self._logger.debug('Closed connection with %s on port %s' % address)
                         
-                        sock_fd.close()
+                        new_sock.close()
                 # Received message from client
                 else:
                     # Retrieve the player associated with this socket
@@ -84,12 +91,13 @@ class CluelessServer:
                             message = pickle.loads(data_string)
                             
                             # Handle the request
-                            broadcast, response = self._server_message.handle_message(message, player)
+                            self._server_message.handle_message(message, player)
                             
-                            # Send a response to the client(s)
-                            self._logger.debug('Sending message to client(s).')
+                            # Send response to the client(s)
+                            self._logger.debug('Sending message(s) to client(s).')
                             
-                            self.send_message(broadcast, sock, response)
+                            # Send all messages in the output queue
+                            self.send_all_messages(sock)
                         # Client disconnected
                         else:
                             self._logger.error('Client disconnected.')
@@ -102,17 +110,27 @@ class CluelessServer:
         
         self._server_socket.close()
     
-    def send_message(self, broadcast, sock, response):
-        data_string = pickle.dumps(response)
+    # Send all of the messages in the output queue
+    def send_all_messages(self, sock):
+        while self._output_queue.qsize() > 0:
+            broadcast, message = self._output_queue.get()
+            self.send_message(broadcast, sock, message)
+    
+    # Sends a reply message or broadcasts the message to all clients
+    def send_message(self, broadcast, sock, message):
+        data_string = pickle.dumps(message)
         
+        # Check to see if this is a broadcast message
         if broadcast == True:
             for client_socket in self._socket_list:
                 #TODO: Should broadcast skip sending a message to the player who initiated the action?
                 if client_socket != self._server_socket:
                     client_socket.sendall(data_string)
+        # Send the message to the specified socket (sock)
         else:
             sock.sendall(data_string)
     
+    # Remove the specified client from the server
     def remove_client(self, sock):
         address = sock._sock.getpeername()
         self._logger.debug('Removing the connection to (%s, %s).' % address)
