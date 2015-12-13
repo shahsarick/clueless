@@ -7,7 +7,7 @@ import threading
 
 from client.Client import Client
 from client.ClientModel import ClientModel
-
+from common.Gameboard import Gameboard
 from common.MessageEnum import MessageEnum
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
@@ -24,7 +24,7 @@ class ClientMessage:
         
         self._client = Client(self._input_queue, self._output_queue)
         self._client_model = ClientModel()
-    
+        self._gameboard = Gameboard()
     # Connects to the server
     def connect_to_server(self, host, port):
         #TODO: May need to move connect_to_server into worker thread to prevent server messages coming back before we're ready for them
@@ -36,7 +36,8 @@ class ClientMessage:
             return True
         else:
             return False
-    
+    def return_client_model_instance(self):
+        return self._client_model
     # Starts the client communication thread
     def start_client(self):
         self._logger.debug('Starting client communication thread.')
@@ -68,6 +69,17 @@ class ClientMessage:
                     
                     old_room_str = RoomEnum.to_string(old_room)
                     player_enum_str = PlayerEnum.to_string(player_enum)
+
+                    # update the in-room status of the client
+                    if self._gameboard.is_hallway(new_room)==True:
+                        self._client_model.moved_to_room(False)
+                        self._client_model.has_moved = True
+                    if self._gameboard.is_hallway(new_room)==False:
+                        self._client_model.has_moved = True
+                        self._client_model.must_suggest = True
+                        #TODO: update the GUI to notify user to make a suggestion
+
+
                     new_room_str = RoomEnum.to_string(new_room)
                     self._logger.debug('%s moved from "%s" to "%s".', player_enum_str, old_room_str, new_room_str)
                 else:

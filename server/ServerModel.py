@@ -60,7 +60,21 @@ class ServerModel:
         self._envelope = [suspect, weapon, room]
         
         self._game_started = False
-    
+
+        # set whos turn it is initially by array index of self._turn_order
+        self.currentTurn = 0
+
+    # returns the player whos turn it is
+    def getCurrentTurn(self):
+        return self._turn_order[self.currentTurn]
+    # increases the turn pointer
+    def updateTurn(self):
+        if self.currentTurn <= 4:
+            self.currentTurn = self.currentTurn + 1
+        else:
+            self.currentTurn = 0
+
+
     # Add a player to the player list using the given address
     def add_player(self, address):
         # Assign an available player_enum from the character list to the new player

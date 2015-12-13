@@ -21,6 +21,7 @@ class Client:
         
         self._input_queue = input_queue
         self._output_queue = send_queue
+        self.client_in_room = False
     
     # Connect to the server
     def connect_to_server(self, host, port):
@@ -92,7 +93,11 @@ class Client:
                 # Send message to the server
                 self._logger.debug('Sending message to server.')
                 MessageProtocol.send_msg(self._client_socket, message)
-    
+
     # only called if there is a message in the queue
     def notify_client_message(self):
         obsObj.subject.notify_observers()
+
+
+
+

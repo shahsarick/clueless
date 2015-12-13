@@ -24,7 +24,7 @@ class ServerMessage:
             message_args = message.get_args()
             
             # Handle move message
-            if message_enum == MessageEnum.MOVE:
+            if message_enum == MessageEnum.MOVE & self.checkValidTurn(player):
                 player_enum = player.get_player_enum()
                 current_room = self._server_model.get_player_position(player_enum)
                 destination_room = message_args[0]
@@ -42,7 +42,8 @@ class ServerMessage:
                 return_message = Message(MessageEnum.MOVE, 1, response_args)
                 
                 self._output_queue.put((broadcast, return_message))
-            
+                # update the turn_state if necessary
+
             # Handle suggest message
             elif message_enum == MessageEnum.SUGGEST:
                 self._logger.debug('Received a suggest message.')
@@ -76,7 +77,11 @@ class ServerMessage:
                             response_args = [PlayerEnum.MISS_SCARLET]
                             return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
                             self._output_queue.put((True, return_message))
-    
+
+            elif message_enum == MessageEnum.TURN_OVER & self.checkValidTurn(player):
+                print "something"
+                self._server_model.updateTurn()
+
     # Add a player using the specified address
     def add_player(self, address):
         self._server_model.add_player(address)
@@ -101,3 +106,11 @@ class ServerMessage:
     # Remove the player associated with the specified address
     def remove_player(self, address):
         self._server_model.remove_player(address)
+
+    def checkValidTurn(self,player):
+        thisPlayer = self._server_model.getCurrentTurn()
+        if player._player_enum == thisPlayer:
+            return True
+        else:
+            self._logger.debug('Not this players turn!')
+            return False
