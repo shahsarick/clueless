@@ -50,14 +50,14 @@ class Client:
             # Get the list of sockets that are readable
             ready_to_read, ready_to_write, input_error = select.select(fd_list, [], [], self.__select_timeout)
             
-            for fd in ready_to_read:
+            for sock in ready_to_read:
                 # Received message from server
-                if fd == self._client_socket:
+                if sock == self._client_socket:
                     # This should ensure all the data from the socket is received
                     message_list = []
                     
                     while 1:
-                        message, bytes_read = MessageProtocol.recv_msg(fd)
+                        message, bytes_read = MessageProtocol.recv_msg(sock)
                         
                         if bytes_read > 0:
                             message_list.append(message)

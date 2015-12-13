@@ -54,6 +54,7 @@ class CluelessServer:
                     # Accept the connection and append it to the socket list
                     self._logger.debug('Received connection request. Establishing connection with client.')
                     new_sock, address = self._server_socket.accept()
+                    new_sock.settimeout(0.5)  #TODO: Remove this and while loop below if we start running into issues (workaround for while loop timeout-blocking issue)
                     
                     # Check the number of players currently connected to the server
                     if len(self._socket_list) < 7:
@@ -77,12 +78,14 @@ class CluelessServer:
                     # This should ensure all the data from the socket is received
                     message_list = []
                     
-                    #TODO: Should have a read loop like Client.py to receive multiple messages from a client (had issues with leaving loop)
-                    message, bytes_read = MessageProtocol.recv_msg(sock)
-                    
-                    if bytes_read > 0:
-                        message_list.append(message)
-                    
+                    while 1:
+                        message, bytes_read = MessageProtocol.recv_msg(sock)
+                        
+                        if bytes_read > 0:
+                            message_list.append(message)
+                        else:
+                            break
+
                     # Check to see if data is available
                     message_list_length = len(message_list)
                     
