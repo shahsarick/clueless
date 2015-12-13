@@ -18,62 +18,64 @@ class ServerMessage:
         self._server_model = ServerModel()
     
     # Handle the messages sent by the client (player)
-    def handle_message(self, message, player):
-        message_enum = message.get_message_enum()
-        message_args = message.get_args()
-        
-        # Handle move message
-        if message_enum == MessageEnum.MOVE:
-            player_enum = player.get_player_enum()
-            current_room = self._server_model.get_player_position(player_enum)
-            destination_room = message_args[0]
+    def handle_message(self, message_list, player):
+        for message in message_list:
+            message_enum = message.get_message_enum()
+            message_args = message.get_args()
             
-            valid_move = self._server_model.perform_move(player_enum, destination_room)
-            
-            if valid_move == True:
-                new_room = self._server_model.get_player_position(player_enum)
-                response_args = [True, player_enum, current_room, new_room]
-                broadcast = True
-            else:
-                response_args = [False]
-                broadcast = False
-            
-            return_message = Message(MessageEnum.MOVE, 1, response_args)
-            
-            self._output_queue.put((broadcast, return_message))
-        
-        # Handle suggest message
-        elif message_enum == MessageEnum.SUGGEST:
-            self._logger.debug('Received a suggest message.')
-        
-        # Handle accuse message
-        elif message_enum == MessageEnum.ACCUSE:
-            self._logger.debug('Received an accusation message.')
-        
-        # Handle lobby ready and lobby unready messages
-        elif message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
-            # Check to see if the game has already started
-            game_started = self._server_model.is_game_started()
-            
-            if game_started == False:
-                # Set player ready status in player entry
-                ready_status = message_args[0]
-                self._logger.debug('Setting ready status for "%s" to %d.', player.get_name(), ready_status)
-                player.set_ready_status(ready_status)
+            # Handle move message
+            if message_enum == MessageEnum.MOVE:
+                player_enum = player.get_player_enum()
+                current_room = self._server_model.get_player_position(player_enum)
+                destination_room = message_args[0]
                 
-                # Return player names and ready states
-                response_args = self._server_model.get_lobby_list()
-                return_message = Message(message_enum, 1, response_args)
+                valid_move = self._server_model.perform_move(player_enum, destination_room)
                 
-                self._output_queue.put((True, return_message))
+                if valid_move == True:
+                    new_room = self._server_model.get_player_position(player_enum)
+                    response_args = [True, player_enum, current_room, new_room]
+                    broadcast = True
+                else:
+                    response_args = [False]
+                    broadcast = False
                 
-                # Check to see if the game is ready to start
-                if message_enum == MessageEnum.LOBBY_READY:
-                    if self._server_model.is_game_ready() == True:
-                        self._logger.debug('Starting game!')
-                        
-                        return_message = Message(MessageEnum.TURN_BEGIN, 1, [PlayerEnum.MISS_SCARLET])
-                        self._output_queue.put((True, return_message))
+                return_message = Message(MessageEnum.MOVE, 1, response_args)
+                
+                self._output_queue.put((broadcast, return_message))
+            
+            # Handle suggest message
+            elif message_enum == MessageEnum.SUGGEST:
+                self._logger.debug('Received a suggest message.')
+            
+            # Handle accuse message
+            elif message_enum == MessageEnum.ACCUSE:
+                self._logger.debug('Received an accusation message.')
+            
+            # Handle lobby ready and lobby unready messages
+            elif message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
+                # Check to see if the game has already started
+                game_started = self._server_model.is_game_started()
+                
+                if game_started == False:
+                    # Set player ready status in player entry
+                    ready_status = message_args[0]
+                    self._logger.debug('Setting ready status for "%s" to %d.', player.get_name(), ready_status)
+                    player.set_ready_status(ready_status)
+                    
+                    # Return player names and ready states
+                    response_args = self._server_model.get_lobby_list()
+                    return_message = Message(message_enum, 1, response_args)
+                    
+                    self._output_queue.put((True, return_message))
+                    
+                    # Check to see if the game is ready to start
+                    if message_enum == MessageEnum.LOBBY_READY:
+                        if self._server_model.is_game_ready() == True:
+                            self._logger.debug('Starting game!')
+                            
+                            response_args = [PlayerEnum.MISS_SCARLET]
+                            return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
+                            self._output_queue.put((True, return_message))
     
     # Add a player using the specified address
     def add_player(self, address):

@@ -1,11 +1,12 @@
 #!/usr/bin/env python
 
-import cPickle as pickle
 import logging
 import Queue
 import select
 import socket
 import threading
+
+from common.MessageProtocol import MessageProtocol
 
 from server.ServerMessage import ServerMessage
 
@@ -73,40 +74,35 @@ class CluelessServer:
                         new_sock.close()
                 # Received message from client
                 else:
-                    # Retrieve the player associated with this socket
-                    address = sock._sock.getpeername()
-                    player = self._server_message.get_player(address)
+                    # This should ensure all the data from the socket is received
+                    message_list = []
                     
-                    # Read message
-                    try:
-                        #TODO: Loop to make sure we get all of the data from socket
-                        data_string = sock.recv(self.__read_size)
+                    #TODO: Should have a read loop like Client.py to receive multiple messages from a client (had issues with leaving loop)
+                    message, bytes_read = MessageProtocol.recv_msg(sock)
+                    
+                    if bytes_read > 0:
+                        message_list.append(message)
+                    
+                    # Check to see if data is available
+                    message_list_length = len(message_list)
+                    
+                    if message_list_length > 0:
+                        # Retrieve the player associated with this socket
+                        address = sock._sock.getpeername()
+                        player = self._server_message.get_player(address)
                         
-                        # Data available
-                        if data_string:
-                            #TODO: Remove this debug statement?
-                            self._logger.debug('Received message from (%s, %s).' % address)
-                            
-                            # Deserialize the message
-                            message = pickle.loads(data_string)
-                            
-                            # Handle the request
-                            self._server_message.handle_message(message, player)
-                            
-                            # Send response to the client(s)
-                            self._logger.debug('Sending message(s) to client(s).')
-                            
-                            # Send all messages in the output queue
-                            self.send_all_messages(sock)
-                        # Client disconnected
-                        else:
-                            self._logger.error('Client disconnected.')
-                            self.remove_client(sock)
-                    except:
-                        self._logger.error('Exception occurred while reading data from (%s, %s).' % address)
+                        # Handle the request
+                        self._server_message.handle_message(message_list, player)
+                        
+                        # Send response to the client(s)
+                        self._logger.debug('Sending message(s) to client(s).')
+                        
+                        # Send all messages in the output queue
+                        self.send_all_messages(sock)
+                    # Client disconnected
+                    else:
+                        self._logger.error('Client disconnected.')
                         self.remove_client(sock)
-                        
-                        continue
         
         self._server_socket.close()
     
@@ -114,21 +110,19 @@ class CluelessServer:
     def send_all_messages(self, sock):
         while self._output_queue.qsize() > 0:
             broadcast, message = self._output_queue.get()
+            
             self.send_message(broadcast, sock, message)
     
     # Sends a reply message or broadcasts the message to all clients
     def send_message(self, broadcast, sock, message):
-        data_string = pickle.dumps(message)
-        
         # Check to see if this is a broadcast message
         if broadcast == True:
             for client_socket in self._socket_list:
-                #TODO: Should broadcast skip sending a message to the player who initiated the action?
                 if client_socket != self._server_socket:
-                    client_socket.sendall(data_string)
+                    MessageProtocol.send_msg(client_socket, message)
         # Send the message to the specified socket (sock)
         else:
-            sock.sendall(data_string)
+            MessageProtocol.send_msg(sock, message)
     
     # Remove the specified client from the server
     def remove_client(self, sock):

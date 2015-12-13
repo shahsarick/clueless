@@ -4,8 +4,9 @@ import logging
 import select
 import socket
 import sys
-import time
 from observer.observer import observerObject
+
+from common.MessageProtocol import MessageProtocol
 
 # reference the subject
 obsObj = observerObject()
@@ -52,34 +53,25 @@ class Client:
             for fd in ready_to_read:
                 # Received message from server
                 if fd == self._client_socket:
-
                     # This should ensure all the data from the socket is received
-                    total_data = []
-                    begin = time.time()
-                    # same as while True but faster
+                    message_list = []
+                    
                     while 1:
-                        # you have data and timeout has occured since getting data
-                        if total_data and time.time()-begin > self.__select_timeout:
-                            break
-                        # wait longer if no data received
-                        elif time.time()-begin > self.__select_timeout * 2:
+                        message, bytes_read = MessageProtocol.recv_msg(fd)
+                        
+                        if bytes_read > 0:
+                            message_list.append(message)
+                        else:
                             break
 
-                        try:
-                            data_string = self._client_socket.recv(self.__read_size)
-                            if data_string:
-                                total_data.append(data_string)
-                                begin = time.time()
-                            else:
-                                time.sleep(0.1)
-                        except:
-                            pass
-                    data_string = ''.join(total_data)
-
-                    # Data available
-                    if data_string:
-                        # Place the server message into the output queue and notify the client that data has been received
-                        self._output_queue.put(data_string)
+                    # Check to see if data is available
+                    message_list_length = len(message_list)
+                    
+                    if message_list_length > 0:
+                        for message in message_list:
+                            # Place the server message into the output queue and notify the client that data has been received
+                            self._output_queue.put(message)
+                        
                         self.notify_client_message()
                     # Disconnected from server
                     else:
@@ -93,14 +85,14 @@ class Client:
                 self._logger.debug('Retrieving message from input queue.')
                 
                 try:
-                    data_string = self._input_queue.get_nowait()
+                    message = self._input_queue.get_nowait()
                 except:
                     break
                 
                 # Send message to the server
                 self._logger.debug('Sending message to server.')
-                self._client_socket.sendall(data_string)
-
+                MessageProtocol.send_msg(self._client_socket, message)
+    
     # only called if there is a message in the queue
     def notify_client_message(self):
         obsObj.subject.notify_observers()
