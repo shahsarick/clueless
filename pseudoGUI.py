@@ -29,19 +29,33 @@ def lobby_ready():
 def lobby_unready():
     message = Message(MessageEnum.LOBBY_UNREADY, 1, [False])
     client_message.send_message(message)
+    
 def suggest():
-    pass
+    print 'Please enter the player_enum'
+    player_enum = int(sys.stdin.readline().rstrip())
+    
+    print 'Please enter the weapon_enum'
+    weapon_enum = int(sys.stdin.readline().rstrip())
+    
+    current_room = client_message.return_client_model_instance().get_player_position()
+    
+    message_args = [player_enum, weapon_enum, current_room]
+    message = Message(MessageEnum.SUGGESTION_BEGIN, 1, message_args)
+    client_message.send_message(message)
+
 def accuse():
     pass
+
 def move():
     room = prompt_move()
-    #TODO: Gameboard needs to be updated with new positions
+    
     if room != -1:
         message_args = [room]
         message = Message(MessageEnum.MOVE, 1, message_args)
         client_message.send_message(message)
     else:
         print 'Invalid room number'
+
 def turn_over():
     message = Message(MessageEnum.TURN_OVER, 1, [True])
     client_message.send_message(message)
@@ -80,16 +94,16 @@ while True:
         sleep(3)
     elif player_input == 'move':
         move()
-        client_message.return_client_model_instance().has_moved = True
-        sleep(3)
-        while client_message.return_client_model_instance().must_suggest == True:
-            print "you must suggest"
+        sleep(6)
+        
+        while client_message.need_suggestion() == True:
+            print "Type suggest to make a suggestion."
+            
             player_input = sys.stdin.readline().rstrip()
-            if player_input =='suggest':
-                client_message.return_client_model_instance().must_suggest = False
+            
+            if player_input == 'suggest':
+                client_message.make_suggestion()
                 suggest()
-                client_message.return_client_model_instance().has_suggested = True
-
     elif player_input == 'over':
         turn_over()
         #reset what the client can do/has done
@@ -97,7 +111,7 @@ while True:
         sleep(3)
     elif player_input == 'accuse':
         # you can only accuse once
-        client_message.return_client_model_instance().has_accused = True
+        client_message.return_client_model_instance()._has_accused = True
         accuse()
         sleep(3)
     else:

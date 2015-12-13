@@ -46,7 +46,10 @@ class ServerModel:
                             PlayerEnum.MR_GREEN, 
                             PlayerEnum.MRS_PEACOCK, 
                             PlayerEnum.PROFESSOR_PLUM]
-        self._turn_state = TurnEnum.MOVE
+        self._current_turn = 0
+        
+        self._suggest_player = PlayerEnum.MISS_SCARLET
+        self._current_suggest = 0
         
         # Create gameboard
         self._gameboard = Gameboard()
@@ -60,21 +63,33 @@ class ServerModel:
         self._envelope = [suspect, weapon, room]
         
         self._game_started = False
-
-        # set whos turn it is initially by array index of self._turn_order
-        self.currentTurn = 0
-
-    # returns the player whos turn it is
-    def getCurrentTurn(self):
-        return self._turn_order[self.currentTurn]
+    
+    # Get the player_enum of who initiated the suggestion
+    def get_suggester(self):
+        return self._suggest_player
+    
+    # Set the player_enum to who initiated the suggestion
+    def set_suggester(self, player_enum):
+        self._suggest_player = player_enum
+        
+        self._current_suggest = self._current_turn
+    
+    # Get the next player_enum in the turn list
+    def get_next_suggest_player(self):
+        self._current_suggest += 1
+        self._current_suggest = self._current_suggest % 6
+        
+        return self._turn_order[self._current_suggest]
+    
+    # returns the player whose turn it is
+    def get_turn_player(self):
+        return self._turn_order[self._current_turn]
+    
     # increases the turn pointer
-    def updateTurn(self):
-        if self.currentTurn <= 4:
-            self.currentTurn = self.currentTurn + 1
-        else:
-            self.currentTurn = 0
-
-
+    def change_turn_player(self):
+        self._current_turn += 1
+        self._current_turn = self._current_turn % 6
+    
     # Add a player to the player list using the given address
     def add_player(self, address):
         # Assign an available player_enum from the character list to the new player

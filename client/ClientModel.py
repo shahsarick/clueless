@@ -1,12 +1,36 @@
 #!/usr/bin/env python
+
+from common.Gameboard import Gameboard
+from common.PlayerEnum import PlayerEnum
+from common.RoomEnum import RoomEnum
+from common.WeaponEnum import WeaponEnum
+
 class ClientModel:
     
     def __init__(self):
-        self.moved_to_room = False
-        self.has_moved = False
-        self.has_suggested = False
-        self.has_accused = False
-        self.must_suggest = False
+        self._moved_to_room = False
+        self._has_moved = False
+        self._has_suggested = False
+        self._has_accused = False
+        self._must_suggest = False
+        
+        # Set card locations
+        self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
+                                  PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
+                                  PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY, \
+                                  PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY, \
+                                  PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
+                                  PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
+        
+        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, \
+                                  WeaponEnum.ROPE : RoomEnum.BALLROOM, \
+                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL, \
+                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM, \
+                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, \
+                                  WeaponEnum.KNIFE : RoomEnum.KITCHEN}
+        
+        self._gameboard = Gameboard()
+        self._gameboard.setup_rooms()
     
     # Gets the player_enum
     def get_player_enum(self):
@@ -15,18 +39,39 @@ class ClientModel:
     # Sets the player_enum
     def set_player_enum(self, player_enum):
         self._player_enum = player_enum
-
-    def moved_to_room(self, bool):
-        if bool == True:
-            self.moved_to_room = True
-        else:
-            self.moved_to_room = False
-    def set_has_moved(self, bool):
-        if bool == True:
-            self.has_moved = True
-        else:
-            self.has_moved = False
+    
+    # Move the specified player to the specified room
+    def move_player(self, player_enum, room):
+        # Update player position
+        self._player_positions[player_enum] = room
+        
+        # Check to see if the player that moved is this player
+        if self._player_enum == player_enum:
+            self._has_moved = True
+            
+            # update the in-room status of the client
+            if self._gameboard.is_hallway(room) == True:
+                self._moved_to_room = False;
+            else:
+                self._moved_to_room = True
+                self._must_suggest = True
+    
+    # Retrieves the player position
+    def get_player_position(self):
+        player_enum = self._player_enum
+        current_room = self._player_positions[player_enum]
+        
+        return current_room
+    
+    # Retrieve the move status for the player
+    def get_suggest_status(self):
+        return self._must_suggest
+    
+    def make_suggestion(self):
+        self._has_suggested = False
+        self._must_suggest = False
+    
     def reset_all(self):
-        self.has_moved = False
-        self.has_suggested = False
-        self.has_accused = False
+        self._has_moved = False
+        self._has_suggested = False
+        self._has_accused = False
