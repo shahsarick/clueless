@@ -201,9 +201,13 @@ class ClientMessage:
             
             # Handle turn over message
             elif message_enum == MessageEnum.TURN_OVER:
-                self._logger.debug('Received a turn over message.')
+                character = message_args[0]
                 
-                #TODO: Set player turn over (reset client_model info)
+                self._logger.debug('It is no longer "%s\'s" turn!.', PlayerEnum.to_string(character))
+                
+                # Reset move variables for turn player
+                if character == self._client_model.get_character():
+                    self._client_model.reset_all()
             
             # Handle turn begin message
             elif message_enum == MessageEnum.TURN_BEGIN:

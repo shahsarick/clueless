@@ -110,7 +110,7 @@ class ServerMessage:
             elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
                 self._logger.debug('Received an accusation message.')
                 
-                player_enum = player.get_player_enum()
+                player_enum = player.get_character()
                 
                 if message_args == self._server_model._envelope == True:
                     # Send a suggest message to all clients
@@ -151,7 +151,15 @@ class ServerMessage:
             elif message_enum == MessageEnum.TURN_OVER and self.is_turn_character(player) == True:
                 self._server_model.change_turn_character()
                 
-                #TODO: Notify players of turn change
+                # Send turn over message
+                response_args = [player.get_character()]
+                return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
+                self._output_queue.put((True, return_message))
+                
+                # Send turn begin message
+                response_args = [self._server_model.get_turn_character()]
+                return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
+                self._output_queue.put((True, return_message))
 
     # Add a player using the specified address
     def add_player(self, address):
