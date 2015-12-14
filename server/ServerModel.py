@@ -410,6 +410,9 @@ class ServerModel:
         else:
             return False
     
+    def is_game_over(self):
+        return self._game_over
+    
     # Sets the game over flag to true
     def set_game_over(self):
         self._game_over = True

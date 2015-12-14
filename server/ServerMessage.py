@@ -90,6 +90,8 @@ class ServerMessage:
                 weapon = message_args[1]
                 room = message_args[2]
                 
+                self._logger.debug('Checking accusation made by %s.', PlayerEnum.to_string(character))
+                
                 accussation = self._server_model.check_accusation(suspect, weapon, room)
                 
                 if accussation == True:
@@ -102,6 +104,26 @@ class ServerMessage:
                     player.set_lost()
                     response_args = [message_args, character, False]
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
+                    self._output_queue.put((True, return_message))
+                    
+                    response_args = [character]
+                    return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
+                    self._output_queue.put((True, return_message))
+                    
+                    # Get the next turn player
+                    self._server_model.change_turn_character()
+                    next_character = self._server_model.get_turn_character()
+                    next_turn_player = self._server_model.get_player_from_character(next_character)
+                    
+                    # Skip unconnected players turn
+                    while next_turn_player.is_connected() == False or next_turn_player._has_lost == True:
+                        self._server_model.change_turn_character()
+                        next_character = self._server_model.get_turn_character()
+                        next_turn_player = self._server_model.get_player_from_character(next_character)
+                    
+                    # Send turn begin message
+                    response_args = [next_character]
+                    return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
                     self._output_queue.put((True, return_message))
 
             # Handle lobby ready and lobby unready messages
@@ -131,33 +153,27 @@ class ServerMessage:
                             self._output_queue.put((True, return_message))
             
             elif message_enum == MessageEnum.TURN_OVER and self.is_turn_character(player) == True:
-                # Send turn over message
-                response_args = [player.get_character()]
-                return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
-                self._output_queue.put((True, return_message))
-                
-                # Get the next turn player
-                self._server_model.change_turn_character()
-                next_character = self._server_model.get_turn_character()
-                next_turn_player = self._server_model.get_player_from_character(next_character)
-
-                # Skip players that have lost the game
-                while player._has_lost == True:
-                    self._logger.debug('Player: "%s" has lost the game. Their turn is skipped.', player.get_name())
+                if self._server_model.is_game_over() == False:
+                    # Send turn over message
+                    response_args = [player.get_character()]
+                    return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
+                    self._output_queue.put((True, return_message))
+                    
+                    # Get the next turn player
                     self._server_model.change_turn_character()
                     next_character = self._server_model.get_turn_character()
                     next_turn_player = self._server_model.get_player_from_character(next_character)
-                
-                # Skip unconnected players turn
-                while next_turn_player.is_connected() == False:
-                    self._server_model.change_turn_character()
-                    next_character = self._server_model.get_turn_character()
-                    next_turn_player = self._server_model.get_player_from_character(next_character)
-                
-                # Send turn begin message
-                response_args = [next_character]
-                return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
-                self._output_queue.put((True, return_message))
+                    
+                    # Skip unconnected players turn
+                    while next_turn_player.is_connected() == False or next_turn_player._has_lost == True:
+                        self._server_model.change_turn_character()
+                        next_character = self._server_model.get_turn_character()
+                        next_turn_player = self._server_model.get_player_from_character(next_character)
+                    
+                    # Send turn begin message
+                    response_args = [next_character]
+                    return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
+                    self._output_queue.put((True, return_message))
     
     # Perform the suggest for players
     def perform_suggest(self):
