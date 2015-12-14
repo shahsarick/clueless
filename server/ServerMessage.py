@@ -24,16 +24,16 @@ class ServerMessage:
             message_args = message.get_args()
             
             # Handle move message
-            if message_enum == MessageEnum.MOVE and self.is_turn_player(player) == True:
-                player_enum = player.get_player_enum()
-                current_room = self._server_model.get_player_position(player_enum)
+            if message_enum == MessageEnum.MOVE and self.is_turn_character(player) == True:
+                character = player.get_character()
+                current_room = self._server_model.get_character_position(character)
                 destination_room = message_args[0]
                 
-                valid_move = self._server_model.perform_move(player_enum, destination_room)
+                valid_move = self._server_model.perform_move(character, destination_room)
                 
                 if valid_move == True:
-                    new_room = self._server_model.get_player_position(player_enum)
-                    response_args = [True, player_enum, current_room, new_room]
+                    new_room = self._server_model.get_character_position(character)
+                    response_args = [True, character, current_room, new_room]
                     broadcast = True
                 else:
                     response_args = [False]
@@ -44,19 +44,19 @@ class ServerMessage:
                 self._output_queue.put((broadcast, return_message))
             
             # Handle suggestion begin message
-            elif message_enum == MessageEnum.SUGGESTION_BEGIN and self.is_turn_player(player) == True:
-                player_enum = player.get_player_enum()
+            elif message_enum == MessageEnum.SUGGESTION_BEGIN and self.is_turn_character(player) == True:
+                character = player.get_character()
                 
                 suspect = message_args[0]
                 weapon = message_args[1]
                 room = message_args[2]
                 
                 # Get the next suggest player
-                self._server_model.set_suggester(player_enum)
-                suggest_player_enum = self._server_model.get_next_suggest_player()
+                self._server_model.set_suggester(character)
+                suggest_character = self._server_model.get_next_suggest_character()
                 
                 # Send a suggest message to all clients
-                response_args = [player_enum, suggest_player_enum, suspect, weapon, room]
+                response_args = [character, suggest_character, suspect, weapon, room]
                 return_message = Message(MessageEnum.SUGGEST, 1, response_args)
                 
                 self._output_queue.put((True, return_message))
@@ -105,8 +105,8 @@ class ServerMessage:
                             return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
                             self._output_queue.put((True, return_message))
             
-            elif message_enum == MessageEnum.TURN_OVER and self.is_turn_player(player) == True:
-                self._server_model.change_turn_player()
+            elif message_enum == MessageEnum.TURN_OVER and self.is_turn_character(player) == True:
+                self._server_model.change_turn_character()
                 
                 #TODO: Notify players of turn change
 
@@ -116,11 +116,13 @@ class ServerMessage:
         
         # Send the player_enum chosen by the server back to the client
         player = self._server_model.get_player(address)
+        
+        character = player.get_character()
         player_enum = player.get_player_enum()
         weapon_enum = player.get_weapon_enum()
         room_enum = player.get_room_enum()
         
-        response_args = [player_enum, weapon_enum, room_enum]
+        response_args = [character, player_enum, weapon_enum, room_enum]
         return_message = Message(MessageEnum.LOBBY_CHANGE_PLAYER, 1, response_args)
         self._output_queue.put((False, return_message))
         
@@ -138,12 +140,12 @@ class ServerMessage:
         self._server_model.remove_player(address)
     
     # Checks to see if the message is from the player whose turn it is
-    def is_turn_player(self, player):
-        player_enum = player.get_player_enum()
-        turn_player = self._server_model.get_turn_player()
+    def is_turn_character(self, player):
+        character = player.get_character()
+        turn_character = self._server_model.get_turn_character()
         
-        if player_enum == turn_player:
+        if character == turn_character:
             return True
         else:
-            self._logger.debug('Not this players turn!')
+            self._logger.debug('Not this characters turn!')
             return False

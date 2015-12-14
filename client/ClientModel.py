@@ -17,22 +17,28 @@ class ClientModel:
         self._suggestion = []
         
         # Set card locations
-        self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
-                                  PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
-                                  PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY, \
-                                  PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY, \
-                                  PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
-                                  PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
+        self._character_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE,
+                                     PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM,
+                                     PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY,
+                                     PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY,
+                                     PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM,
+                                     PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
         
-        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, \
-                                  WeaponEnum.ROPE : RoomEnum.BALLROOM, \
-                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL, \
-                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM, \
-                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, \
+        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY,
+                                  WeaponEnum.ROPE : RoomEnum.BALLROOM,
+                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL,
+                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM,
+                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY,
                                   WeaponEnum.KNIFE : RoomEnum.KITCHEN}
         
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
+    
+    def get_character(self):
+        return self._character
+    
+    def set_character(self, character):
+        self._character = character
     
     # Gets the player_enum
     def get_player_enum(self):
@@ -58,13 +64,13 @@ class ClientModel:
     def set_room_enum(self, room_enum):
         self._room_enum = room_enum
     
-    # Move the specified player to the specified room
-    def move_player(self, player_enum, room):
+    # Move the specified character to the specified room
+    def move_character(self, character, room):
         # Update player position
-        self._player_positions[player_enum] = room
+        self._character_positions[character] = room
         
         # Check to see if the player that moved is this player
-        if self._player_enum == player_enum:
+        if self._character == character:
             self._has_moved = True
             
             # update the in-room status of the client
@@ -75,9 +81,8 @@ class ClientModel:
                 self._must_suggest = True
     
     # Retrieves the player position
-    def get_player_position(self):
-        player_enum = self._player_enum
-        current_room = self._player_positions[player_enum]
+    def get_character_position(self):
+        current_room = self._character_positions[self._character]
         
         return current_room
     

@@ -37,7 +37,7 @@ def suggest():
     print 'Please enter the weapon_enum'
     weapon_enum = int(sys.stdin.readline().rstrip())
     
-    current_room = client_message.return_client_model_instance().get_player_position()
+    current_room = client_message.return_client_model_instance().get_character_position()
     
     message_args = [player_enum, weapon_enum, current_room]
     message = Message(MessageEnum.SUGGESTION_BEGIN, 1, message_args)
