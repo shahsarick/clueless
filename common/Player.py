@@ -53,6 +53,10 @@ class Player:
     def add_room_enum(self, room_enum):
         self._room_enum_list.append(room_enum)
     
+    # Retrieves a list of the cards this player has
+    def get_cards(self):
+        return (self._player_enum_list, self._weapon_enum_list, self._room_enum_list)
+    
     # Gets the name
     def get_name(self):
         return self._player_name

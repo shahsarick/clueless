@@ -122,7 +122,6 @@ def turn_over():
 logging.basicConfig(level=logging.DEBUG, format='%(asctime)s.%(msecs)d | %(levelname)s | %(module)s.%(funcName)s : %(message)s', datefmt="%H:%M:%S")
 
 # Create the client
-#TODO: Get IP from GUi
 host = socket.gethostbyname(socket.gethostname())
 port = 14415
 

@@ -85,34 +85,37 @@ class ClientMessage:
                         self._logger.debug('You need to make a suggestion!')
                         
                         #TODO: Notify the player to make a suggestion by signaling the GUI
+                    else:
+                        if self._client_model.get_character() == character:
+                            self._logger.debug('You must now make an accusation or end your turn.')
                 else:
                     self._logger.debug('Invalid move!')
             
             # Handle suggest message
             elif message_enum == MessageEnum.SUGGEST:
                 character = message_args[0]
-                disprover = message_args[1]
+                disprove_character = message_args[1]
                 
                 suspect = message_args[2]
                 weapon = message_args[3]
                 room = message_args[4]
                 
                 character_str = PlayerEnum.to_string(character)
-                disprover_str = PlayerEnum.to_string(disprover)
+                disprover_character_str = PlayerEnum.to_string(disprove_character)
                 
                 suspect_str = PlayerEnum.to_string(suspect)
                 weapon_str = WeaponEnum.to_string(weapon)
                 room_str = RoomEnum.to_string(room)
                 
                 self._logger.debug('%s has made the following suggestion: (%s, %s, %s)', character_str, suspect_str, weapon_str, room_str)
-                self._logger.debug('%s is now attempting to disprove the suggestion.', disprover_str)
+                self._logger.debug('%s is now attempting to disprove the suggestion.', disprover_character_str)
                 
                 # Set the suggestion in the client model
                 suggestion = [suspect, weapon, room]
                 self._client_model.set_suggestion(suggestion)
                 
                 # Check to see if this player needs to attempt to disprove the suggestion
-                if disprover == self._client_model.get_character():
+                if disprove_character == self._client_model.get_character():
                     self._logger.debug('You must now try to disprove the suggestion!')
                     
                     #TODO: Notify the player to disprove the suggestion by signaling the GUI
@@ -121,15 +124,15 @@ class ClientMessage:
             elif message_enum == MessageEnum.SUGGESTION_END:
                 self._logger.debug('Suggestion turn has ended.')
                 
+                character = message_args[0]
+                player_enum = message_args[1]
+                weapon = message_args[2]
+                room = message_args[3]
+                
+                character_str = PlayerEnum.to_string(character)
+                
                 # This player made the original suggestion
                 if self._client_model.has_suggested() == True:
-                    character = message_args[0]
-                    player_enum = message_args[1]
-                    weapon = message_args[2]
-                    room = message_args[3]
-                    
-                    character_str = PlayerEnum.to_string(character)
-                    
                     if player_enum is not None:
                         player_enum_str = PlayerEnum.to_string(player_enum)
                         self._logger.debug('%s disproved you with the %s card.', character_str, player_enum_str)
@@ -145,6 +148,8 @@ class ClientMessage:
                     self._logger.debug('You must now make an accusation or end your turn.')
                     
                     #TODO: Notify the player to make an accusation by signaling the GUI
+                else:
+                    self._logger.debug('%s disproved the suggestion!', character_str)
             
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE:
@@ -163,12 +168,15 @@ class ClientMessage:
                     self._logger.debug('This player was correct and has won the game!')
                     self._client_model.set_accuse_status(True)
                     
+                    self._client_model.set_won_game(True)
+                    
                     #TODO: Notify the player that they have won by signaling the GUI
                 else:
                     self._logger.debug('This accusation was false! This player has lost the game!')
                     self._client_model.set_accuse_status(True)
                     
-                    #TODO: End the game in ClientModel
+                    self._client_model.set_won_game(False)
+                    
                     #TODO: Notify the player that they have lost by signaling the GUI
             
             # Handle lobby ready and unready messages

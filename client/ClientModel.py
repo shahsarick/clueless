@@ -12,6 +12,8 @@ class ClientModel:
     def __init__(self):
         self._logger = logging.getLogger('ClientModel')
         
+        self._won = None
+        
         self._moved_to_room = False
         self._has_moved = False
         self._has_suggested = False
@@ -42,9 +44,11 @@ class ClientModel:
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
     
+    # Get character token for this player
     def get_character(self):
         return self._character
     
+    # Set character token for this player
     def set_character(self, character):
         self._character = character
     
@@ -106,6 +110,7 @@ class ClientModel:
     def get_suggest_status(self):
         return self._must_suggest
     
+    # Register that a suggestion is being made
     def make_suggestion(self):
         self._has_suggested = True
         self._must_suggest = False
@@ -133,10 +138,19 @@ class ClientModel:
     def has_suggested(self):
         return self._has_suggested
     
+    # Reset turn attributes
     def reset_all(self):
         self._has_moved = False
         self._has_suggested = False
         self._has_accused = False
-
+        
     def set_accuse_status(self, accuse_status):
         self._has_accused = accuse_status
+    
+    # Returns whether the player has won or lost (None if neither)
+    def has_won(self):
+        return self._won
+    
+    # Sets whether the player has won or lost
+    def set_won_game(self, win_status):
+        self._won = win_status

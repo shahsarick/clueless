@@ -57,17 +57,13 @@ class ServerMessage:
                 
                 # Get the next suggest player
                 self._server_model.set_suggester(character)
-                disprover = self._server_model.get_next_suggest_character()
                 
-                # Send a suggest message to all clients
-                response_args = [character, disprover, suspect, weapon, room]
-                return_message = Message(MessageEnum.SUGGEST, 1, response_args)
-                
-                self._output_queue.put((True, return_message))
+                # Attempt to disprove suggestion with next suggester
+                self.perform_suggest()
             
             # Handle suggest message
             elif message_enum == MessageEnum.SUGGEST:
-                character = player.get_character()
+                disprove_character = player.get_character()
                 
                 player_enum = message_args[0]
                 weapon = message_args[1]
@@ -75,40 +71,18 @@ class ServerMessage:
                 
                 # Player disproved the suggestion
                 if player_enum is not None or weapon is not None or room is not None:
-                    response_args = [character, player_enum, weapon, room]
+                    response_args = [disprove_character, player_enum, weapon, room]
                     return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
                     
                     self._output_queue.put((True, return_message))
                 # Player could not disprove the suggestion
                 else:
-                    character_str = PlayerEnum.to_string(character)
+                    disprove_character_str = PlayerEnum.to_string(disprove_character)
+                    self._logger.debug('%s could not disprove the suggestion.', disprove_character_str)
                     
-                    self._logger.debug('%s could not disprove the suggestion.', character_str)
+                    # Attempt to disprove suggestion with next suggester
+                    self.perform_suggest()
                     
-                    suggestion = self._server_model.get_suggestion()
-                    suspect = suggestion[0]
-                    weapon = suggestion[1]
-                    room = suggestion[2]
-                    
-                    # Get the original suggester and next disprover
-                    suggester = self._server_model.get_suggester()
-                    disprover = self._server_model.get_next_suggest_character()
-                    
-                    #TODO: Process disprover to see if they are connected or not. If not connected, do not send out message below yet. Instead, process suggestion for player (handles disconnected and missing players).
-                    
-                    # All players have attempted to disprove suggestion
-                    if suggester == disprover:
-                        self._logger.debug('Suggestion could not be disproven by anyone.')
-                        
-                        response_args = [character, player_enum, weapon, room]
-                        return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
-                        self._output_queue.put((True, return_message))
-                    # Send suggest message to next disprover
-                    else:
-                        response_args = [suggester, disprover, suspect, weapon, room]
-                        return_message = Message(MessageEnum.SUGGEST, 1, response_args)
-                        self._output_queue.put((True, return_message))
-            
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
                 character = player.get_character()
@@ -119,8 +93,6 @@ class ServerMessage:
                 accussation = self._server_model.check_accusation(suspect, weapon, room)
                 
                 if accussation == True:
-                    #TODO: End the game in ServerModel (reset values so we can start a new game without turning the server off?)
-                    
                     # Send an accuse message to all clients
                     response_args = [message_args, character, True]
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
@@ -157,20 +129,75 @@ class ServerMessage:
                             self._output_queue.put((True, return_message))
             
             elif message_enum == MessageEnum.TURN_OVER and self.is_turn_character(player) == True:
-                self._server_model.change_turn_character()
-                
                 # Send turn over message
                 response_args = [player.get_character()]
                 return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
                 self._output_queue.put((True, return_message))
                 
-                #TODO: Process turn character to see if they are connected or not. If not connected, do not send out message below. Instead, process turn for player (handles disconnected and missing players)
+                # Get the next turn player
+                self._server_model.change_turn_character()
+                next_character = self._server_model.get_turn_character()
+                next_turn_player = self._server_model.get_player_from_character(next_character)
+                
+                # Skip unconnected players turn
+                while next_turn_player.is_connected() == False:
+                    self._server_model.change_turn_character()
+                    next_character = self._server_model.get_turn_character()
+                    next_turn_player = self._server_model.get_player_from_character(next_character)
                 
                 # Send turn begin message
-                response_args = [self._server_model.get_turn_character()]
+                response_args = [next_character]
                 return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
                 self._output_queue.put((True, return_message))
-
+    
+    # Perform the suggest for players
+    def perform_suggest(self):
+        suggestion = self._server_model.get_suggestion()
+        suspect = suggestion[0]
+        weapon = suggestion[1]
+        room = suggestion[2]
+        
+        disproven = False
+        
+        # Get the original suggester and next player to disprove
+        suggester = self._server_model.get_suggester()
+        disprove_character = self._server_model.get_next_suggest_character()
+        disprove_player = self._server_model.get_player_from_character(disprove_character)
+        
+        # Attempt to disprove suggestion for all players that are not connected
+        while disprove_player.is_connected() == False:
+            disproven, matched_args = self._server_model.perform_suggest(disprove_player)
+            
+            if disproven == True:
+                suspect = matched_args[0]
+                weapon = matched_args[1]
+                room = matched_args[2]
+                
+                response_args = [disprove_character, suspect, weapon, room]
+                return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
+                
+                self._output_queue.put((True, return_message))
+                
+                break
+            else:
+                disprove_character = self._server_model.get_next_suggest_character()
+                disprove_player = self._server_model.get_player_from_character(disprove_character)
+        
+        # Check to see if an unconnected player disproved the suggestion
+        if disproven == False:
+            # All players have attempted to disprove suggestion
+            if suggester == disprove_character:
+                self._logger.debug('Suggestion could not be disproven by anyone.')
+                
+                response_args = [disprove_character, suspect, weapon, room]
+                return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
+                self._output_queue.put((True, return_message))
+            # Send suggest message to next disprover
+            else:
+                response_args = [suggester, disprove_character, suspect, weapon, room]
+                return_message = Message(MessageEnum.SUGGEST, 1, response_args)
+                self._output_queue.put((True, return_message))
+    
     # Add a player using the specified address
     def add_player(self, address):
         self._server_model.add_player(address)

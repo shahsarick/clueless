@@ -75,6 +75,7 @@ class ServerModel:
         self._suggestion = []
         
         self._game_started = False
+        self._game_over = False
         
         # Create gameboard
         self._gameboard = Gameboard()
@@ -201,11 +202,11 @@ class ServerModel:
     def set_suggestion(self, suggestion):
         self._suggestion = suggestion
         
-        character = suggestion[0]
+        suspect = suggestion[0]
         weapon = suggestion[1]
         room = suggestion[2]
         
-        self._character_positions[character] = room
+        self._character_positions[suspect] = room
         self._weapon_locations[weapon] = room
     
     # returns the player whose turn it is
@@ -252,6 +253,12 @@ class ServerModel:
                 if self.compare_addresses(address, player_address) == True:
                     return player
     
+    # Retrieves the player from the player list using the specified character
+    def get_player_from_character(self, character):
+        for player in self._player_list:
+            if player.get_character() == character:
+                return player
+    
     # Remove the player from the game
     def remove_player(self, address):
         self._logger.debug('Removing (%s, %s) from player list.' % address)
@@ -297,6 +304,52 @@ class ServerModel:
             self._character_positions[character] = destination_room
         
         return valid_move
+    
+    # Perform a suggestion response for players that are not connected
+    def perform_suggest(self, player):
+        self._logger.debug('Attempting to disprove suggestion for %s.', PlayerEnum.to_string(player.get_character()))
+        
+        player_enum_list, weapon_list, room_list = player.get_cards()
+        
+        matched_args = [None, None, None]
+        matched_player_enum = False
+        matched_weapon = False
+        matched_room = False
+        disproven = False
+        
+        for player_enum in player_enum_list:
+            if player_enum == self._suggestion[0]:
+                matched_player_enum = True
+                break
+        
+        for weapon in weapon_list:
+            if weapon == self._suggestion[1]:
+                matched_weapon = True
+                break
+        
+        for room in room_list:
+            if room == self._suggestion[2]:
+                matched_room = True
+                break
+        
+        if matched_player_enum == True or matched_weapon == True or matched_room == True:
+            disproven = True
+            matched = False
+            
+            while matched == False:
+                choice = randint(1, 3)
+                
+                if choice == 1 and matched_player_enum == True:
+                    matched = True
+                    matched_args[0] = player_enum
+                elif choice == 2 and matched_weapon == True:
+                    matched = True
+                    matched_args[1] = weapon
+                elif choice == 3 and matched_room == True:
+                    matched = True
+                    matched_args[2] = room
+        
+        return (disproven, matched_args)
     
     # Get the list of players in the lobby and their associated ready status
     def get_lobby_list(self):
@@ -351,6 +404,14 @@ class ServerModel:
     # Check to see if the accusation is correct or not
     def check_accusation(self, suspect, weapon, room):
         if suspect == self._envelope[0] and weapon == self._envelope[1] and room == self._envelope[2]:
+            self.set_game_over(self)
+            
             return True
         else:
             return False
+    
+    # Sets the game over flag to true
+    def set_game_over(self):
+        self._game_over = True
+        
+        #TODO: Reset game to a new game?
