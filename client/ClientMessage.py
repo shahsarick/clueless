@@ -6,6 +6,8 @@ import threading
 
 from client.Client import Client
 from client.ClientModel import ClientModel
+
+from common.Message import Message
 from common.MessageEnum import MessageEnum
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
@@ -158,7 +160,7 @@ class ClientMessage:
                 character = message_args[1]
                 correct = message_args[2]
 
-                character_str = PlayerEnum.to_string(self._client_model.get_character())
+                character_str = PlayerEnum.to_string(character)
                 suspect_str = PlayerEnum.to_string(accusation[0])
                 weapon_str = WeaponEnum.to_string(accusation[1])
                 room_str = RoomEnum.to_string(accusation[2])
@@ -232,7 +234,7 @@ class ClientMessage:
             elif message_enum == MessageEnum.TURN_OVER:
                 character = message_args[0]
                 
-                self._logger.debug('It is no longer "%s\'s" turn!.', PlayerEnum.to_string(character))
+                self._logger.debug('It is no longer "%s\'s" turn!', PlayerEnum.to_string(character))
                 
                 # Reset move variables for turn player
                 if character == self._client_model.get_character():
@@ -243,12 +245,12 @@ class ClientMessage:
             elif message_enum == MessageEnum.TURN_BEGIN:
                 character = message_args[0]
                 
-                self._logger.debug('It is now "%s\'s" turn!.', PlayerEnum.to_string(character))
-                
                 if character == self._client_model.get_character():
                     self._logger.debug('It is now your turn!')
-                
+                    
                     #TODO: Notify the player that it is their turn by signaling the GUI
+                else:
+                    self._logger.debug('It is now "%s\'s" turn!', PlayerEnum.to_string(character))
     
     # Checks to see if a suggestion must be made
     def need_suggestion(self):
