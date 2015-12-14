@@ -57,7 +57,7 @@ class ClientMessage:
             message = self._output_queue.get()
             
             message_enum = message.get_message_enum()
-            num_args = message.get_num_args()
+            #num_args = message.get_num_args()
             message_args = message.get_args()
             
             # Handle move message

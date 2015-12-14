@@ -97,9 +97,6 @@ class ServerModel:
         self._weapon_enum_list[weapon] = True
         self._room_enum_list[room] = True
         
-        #TODO: Remove
-        self._logger.debug('Envelope: (%s, %s, %s).', PlayerEnum.to_string(suspect), WeaponEnum.to_string(weapon), RoomEnum.to_string(room))
-        
         self._envelope = [suspect, weapon, room]
     
     # Deals the cards to each player
@@ -196,11 +193,20 @@ class ServerModel:
         
         return self._turn_order[self._current_suggest]
     
+    # Retrieves the current suggestion
     def get_suggestion(self):
         return self._suggestion
     
+    # Sets the current suggestion
     def set_suggestion(self, suggestion):
         self._suggestion = suggestion
+        
+        character = suggestion[0]
+        weapon = suggestion[1]
+        room = suggestion[2]
+        
+        self._character_positions[character] = room
+        self._weapon_locations[weapon] = room
     
     # returns the player whose turn it is
     def get_turn_character(self):
@@ -216,7 +222,7 @@ class ServerModel:
         # Assign an available player_enum from the character list to the new player
         for player in self._player_list:
             if player.is_connected() == False:
-                player.set_connected()
+                player.set_connected(True)
                 player.set_address(address)
                 player.set_ready_status(False)
                 

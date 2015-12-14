@@ -21,6 +21,7 @@ class ServerMessage:
     def handle_message(self, message_list, player):
         for message in message_list:
             message_enum = message.get_message_enum()
+            #num_args = message.get_num_args()
             message_args = message.get_args()
             
             # Handle move message

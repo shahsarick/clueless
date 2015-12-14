@@ -1,5 +1,7 @@
 #!/usr/bin/env python
 
+import logging
+
 from common.Gameboard import Gameboard
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
@@ -8,6 +10,8 @@ from common.WeaponEnum import WeaponEnum
 class ClientModel:
     
     def __init__(self):
+        self._logger = logging.getLogger('ClientModel')
+        
         self._moved_to_room = False
         self._has_moved = False
         self._has_suggested = False
@@ -84,12 +88,17 @@ class ClientModel:
                 self._moved_to_room = True
                 self._must_suggest = True
     
+    # Gets whether this player has moved, and if they were moved to a room
+    def get_move_status(self):
+        return (self._has_moved, self._moved_to_room)
+    
     # Retrieves the player position
     def get_character_position(self):
         current_room = self._character_positions[self._character]
         
         return current_room
     
+    # Retrieves a list of the cards this player has
     def get_cards(self):
         return (self._player_enum_list, self._weapon_enum_list, self._room_enum_list)
     
@@ -101,12 +110,26 @@ class ClientModel:
         self._has_suggested = True
         self._must_suggest = False
     
+    # Retrieves the current suggestion
     def get_suggestion(self):
         return self._suggestion
     
+    # Sets the current suggestion
     def set_suggestion(self, suggestion):
         self._suggestion = suggestion
+        
+        character = suggestion[0]
+        weapon = suggestion[1]
+        room = suggestion[2]
+        
+        self._character_positions[character] = room
+        self._weapon_locations[weapon] = room
+        
+        # Check to see if the character controlled by this player was moved by the suggestion
+        if character == self._character:
+            self._moved_to_room = True
     
+    # Check to see if this player has made a suggestion
     def has_suggested(self):
         return self._has_suggested
     
