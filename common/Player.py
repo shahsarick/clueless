@@ -12,6 +12,7 @@ class Player:
         self._room_enum_list = []
         
         self.reset_player()
+        self._has_lost = False
     
     # Gets the IP and port for the player associated with this player entry
     def get_address(self):
@@ -86,3 +87,6 @@ class Player:
         self._player_name = PlayerEnum.to_string(self._character)
         self._ready_state = True
         self._is_connected = False
+
+    def set_lost(self):
+        self._has_lost = True
