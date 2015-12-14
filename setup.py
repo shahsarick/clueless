@@ -1,4 +1,5 @@
 from distutils.core import setup
+from glob import glob
 import py2exe
 import sys, os, site, shutil
 
@@ -6,6 +7,7 @@ site_dir = site.getsitepackages()[1]
 include_dll_path = os.path.join(site_dir, 'gnome')
 
 gtk_dirs_to_include = ['etc', 'lib\\gtk-3.0', 'lib\\girepository-1.0', 'lib\\gio', 'lib\\gdk-pixbuf-2.0', 'share\\glib-2.0', 'share\\fonts', 'share\\icons', 'share\\themes\\Default', 'share\\themes\\HighContrast']
+data_files = [('Microsoft.VC90.CRT', glob(r'C:\C dlls\*.*'))]
 
 gtk_dlls = [] 
 tmp_dlls = [] 
@@ -19,7 +21,9 @@ for dll in gtk_dlls:
     shutil.copy(dll, cdir) 
 
 # -- change main.py if needed -- #
-setup(windows=['client_main.py'], options={ 
+setup(windows=['client_main.py'],
+    data_files=data_files,
+    options={ 
     'py2exe': { 
         'includes' : ['gi'], 
         'packages': ['gi'] 
