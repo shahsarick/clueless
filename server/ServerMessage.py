@@ -190,7 +190,7 @@ class ServerMessage:
         disprove_player = self._server_model.get_player_from_character(disprove_character)
         
         # Attempt to disprove suggestion for all players that are not connected
-        while disprove_player.is_connected() == False:
+        while disprove_player.is_connected() == False or disprove_player._has_lost == True:
             disproven, matched_args = self._server_model.perform_suggest(disprove_player)
             
             if disproven == True:
