@@ -117,12 +117,11 @@ class ServerModel:
     
     # Add a player to the player list using the given address
     def add_player(self, address):
-        # Find an available character
-        while 1:
-            character = randint(1, 6)
-            
+        # Assign an available player_enum from the character list to the new player
+        for character in self._character_list:
             if self._character_list[character] == False:
                 self._character_list[character] = True
+                
                 break
         
         # Find an available weapon_enum
@@ -179,17 +178,17 @@ class ServerModel:
             
             if self.compare_addresses(address, player_address) == True:
                 # Make the character, player, weapon, and room available to be used by someone else
-                character = player.get_character()()
+                character = player.get_character()
                 self._character_list[character] = False
                 
                 player_enum = player.get_player_enum()
                 self._player_enum_list[player_enum] = False
                 
                 weapon_enum = player.get_weapon_enum()
-                self._weapon_enum_list_list[weapon_enum] = False
+                self._weapon_enum_list[weapon_enum] = False
                 
                 room_enum = player.get_room_enum()
-                self._room_enum_list_list[room_enum] = False
+                self._room_enum_list[room_enum] = False
                 
                 # Remove the player from the player list
                 self._player_list.remove(player)
