@@ -245,12 +245,12 @@ class ClientMessage:
             elif message_enum == MessageEnum.TURN_BEGIN:
                 character = message_args[0]
                 
-                self._logger.debug('It is now "%s\'s" turn!', PlayerEnum.to_string(character))
-                
                 if character == self._client_model.get_character():
                     self._logger.debug('It is now your turn!')
-                
+                    
                     #TODO: Notify the player that it is their turn by signaling the GUI
+                else:
+                    self._logger.debug('It is now "%s\'s" turn!', PlayerEnum.to_string(character))
     
     # Checks to see if a suggestion must be made
     def need_suggestion(self):
