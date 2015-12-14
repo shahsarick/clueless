@@ -1,0 +1,8 @@
+Exception in thread Thread-1:
+Traceback (most recent call last):
+  File "threading.pyc", line 810, in __bootstrap_inner
+  File "threading.pyc", line 763, in run
+  File "client\Client.pyc", line 61, in run
+  File "common\MessageProtocol.pyc", line 26, in recv_msg
+ImportError: No module named Message
+
