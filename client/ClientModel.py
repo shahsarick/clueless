@@ -86,16 +86,24 @@ class ClientModel:
         
         return current_room
     
+    def get_cards(self):
+        return (self._player_enum, self._weapon_enum, self._room_enum)
+    
     # Retrieve the move status for the player
     def get_suggest_status(self):
         return self._must_suggest
     
     def make_suggestion(self):
-        self._has_suggested = False
         self._must_suggest = False
+    
+    def get_suggestion(self):
+        return self._suggestion
     
     def set_suggestion(self, suggestion):
         self._suggestion = suggestion
+    
+    def has_suggested(self):
+        return self._has_suggested
     
     def reset_all(self):
         self._has_moved = False

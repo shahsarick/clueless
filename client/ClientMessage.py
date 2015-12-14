@@ -59,7 +59,7 @@ class ClientMessage:
             num_args = message.get_num_args()
             message_args = message.get_args()
             
-            # Handle move messages
+            # Handle move message
             if message_enum == MessageEnum.MOVE:
                 valid_move = message_args[0]
                 
@@ -87,36 +87,64 @@ class ClientMessage:
                 else:
                     self._logger.debug('Invalid move!')
             
-            # Handle suggest messages
+            # Handle suggest message
             elif message_enum == MessageEnum.SUGGEST:
                 character = message_args[0]
-                suggest_character = message_args[1]
+                disprover = message_args[1]
                 
                 suspect = message_args[2]
                 weapon = message_args[3]
                 room = message_args[4]
                 
                 character_str = PlayerEnum.to_string(character)
-                suggest_character_str = PlayerEnum.to_string(suggest_character)
+                disprover_str = PlayerEnum.to_string(disprover)
                 
                 suspect_str = PlayerEnum.to_string(suspect)
                 weapon_str = WeaponEnum.to_string(weapon)
                 room_str = RoomEnum.to_string(room)
                 
                 self._logger.debug('%s has made the following suggestion: (%s, %s, %s)', character_str, suspect_str, weapon_str, room_str)
-                self._logger.debug('%s is now attempting to disprove the suggestion.', suggest_character_str)
+                self._logger.debug('%s is now attempting to disprove the suggestion.', disprover_str)
                 
                 # Set the suggestion in the client model
                 suggestion = [suspect, weapon, room]
                 self._client_model.set_suggestion(suggestion)
                 
                 # Check to see if this player needs to attempt to disprove the suggestion
-                if suggest_character == self._client_model.get_character():
+                if disprover == self._client_model.get_character():
                     self._logger.debug('You must now try to disprove the suggestion!')
                     
                     #TODO: Notify the player to disprove the suggestion by signaling the GUI
+            
+            # Handle suggest end message
+            elif message_enum == MessageEnum.SUGGESTION_END:
+                self._logger.debug('Suggestion turn has ended.')
+                
+                # This player made the original suggestion
+                if self._client_model.has_suggested() == True:
+                    character = message_args[0]
+                    player_enum = message_args[1]
+                    weapon = message_args[2]
+                    room = message_args[3]
                     
-                    pass
+                    character_str = PlayerEnum.to_string(character)
+                    
+                    if player_enum is not '':
+                        player_enum_str = PlayerEnum.to_string(player_enum)
+                        self._logger.debug('%s disproved you with the %s card.', character_str, player_enum_str)
+                    elif weapon is not '':
+                        weapon_str = PlayerEnum.to_string(weapon)
+                        self._logger.debug('%s disproved you with the %s card.', character_str, weapon_str)
+                    elif room is not '':
+                        room_str = PlayerEnum.to_string(room)
+                        self._logger.debug('%s disproved you with the %s card.', character_str, room_str)
+                    else:
+                        self._logger.debug('No one disproved your suggestion!')
+                    
+                    self._logger.debug('You must now make an accusation or end your turn.')
+                    
+                    #TODO: Notify the player to make an accusation by signaling the GUI
+            
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE:
                 self._logger.debug('Received an accusation message.')
@@ -191,3 +219,9 @@ class ClientMessage:
     
     def make_suggestion(self):
         self._client_model.make_suggestion()
+    
+    def get_suggestion(self):
+        return self._client_model.get_suggestion()
+    
+    def get_cards(self):
+        return self._client_model.get_cards()

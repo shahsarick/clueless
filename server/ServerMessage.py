@@ -51,24 +51,67 @@ class ServerMessage:
                 weapon = message_args[1]
                 room = message_args[2]
                 
+                # Set the suggestion on the server
+                self._server_model.set_suggestion([suspect, weapon, room])
+                
                 # Get the next suggest player
                 self._server_model.set_suggester(character)
-                suggest_character = self._server_model.get_next_suggest_character()
+                disprover = self._server_model.get_next_suggest_character()
                 
                 # Send a suggest message to all clients
-                response_args = [character, suggest_character, suspect, weapon, room]
+                response_args = [character, disprover, suspect, weapon, room]
                 return_message = Message(MessageEnum.SUGGEST, 1, response_args)
                 
                 self._output_queue.put((True, return_message))
             
             # Handle suggest message
             elif message_enum == MessageEnum.SUGGEST:
-                self._logger.debug('Received a suggest message.')
+                character = player.get_character()
+                
+                player_enum = message_args[0]
+                weapon = message_args[1]
+                room = message_args[2]
+                
+                # Player disproved the suggestion
+                if player_enum is not '' or weapon is not '' or room is not '':
+                    response_args = [character, player_enum, weapon, room]
+                    return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
+                    
+                    self._output_queue.put((True, return_message))
+                # Player could not disprove the suggestion
+                else:
+                    character_str = PlayerEnum.to_string(character)
+                    
+                    self._logger.debug('%s could not disprove the suggestion.', character_str)
+                    
+                    suggestion = self._server_model.get_suggestion()
+                    suspect = suggestion[0]
+                    weapon = suggestion[1]
+                    room = suggestion[2]
+                    
+                    # Get the original suggester and next disprover
+                    suggester = self._server_model.get_suggester()
+                    disprover = self._server_model.get_next_suggest_character()
+                    
+                    # All players have attempted to disprove suggestion
+                    if suggester == disprover:
+                        self._logger.debug('Suggestion could not be disproven by anyone.')
+                        
+                        response_args = [character, player_enum, weapon, room]
+                        return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
+                        self._output_queue.put((True, return_message))
+                    # Send suggest message to next disprover
+                    else:
+                        response_args = [suggester, disprover, suspect, weapon, room]
+                        return_message = Message(MessageEnum.SUGGEST, 1, response_args)
+                        self._output_queue.put((True, return_message))
             
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
                 self._logger.debug('Received an accusation message.')
+                
                 player_enum = player.get_player_enum()
+                
                 if message_args == self._server_model._envelope == True:
                     # Send a suggest message to all clients
                     response_args = [message_args, player_enum, True]

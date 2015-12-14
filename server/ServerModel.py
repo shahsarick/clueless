@@ -7,7 +7,6 @@ from common.Gameboard import Gameboard
 from common.Player import Player
 from common.PlayerEnum import PlayerEnum
 from common.RoomEnum import RoomEnum
-from common.TurnEnum import TurnEnum
 from common.WeaponEnum import WeaponEnum
 
 class ServerModel:
@@ -18,17 +17,17 @@ class ServerModel:
         # Create character dictionary and player list for lobby and socket use
         self._character_list = {PlayerEnum.MISS_SCARLET : False, 
                                 PlayerEnum.COLONEL_MUSTARD : False, 
-                                PlayerEnum.PROFESSOR_PLUM : False, 
-                                PlayerEnum.MR_GREEN : False, 
                                 PlayerEnum.MRS_WHITE : False, 
-                                PlayerEnum.MRS_PEACOCK : False}
+                                PlayerEnum.MR_GREEN : False, 
+                                PlayerEnum.MRS_PEACOCK : False, 
+                                PlayerEnum.PROFESSOR_PLUM : False}
         
         self._player_enum_list = {PlayerEnum.MISS_SCARLET : False, 
                                   PlayerEnum.COLONEL_MUSTARD : False, 
-                                  PlayerEnum.PROFESSOR_PLUM : False, 
-                                  PlayerEnum.MR_GREEN : False, 
                                   PlayerEnum.MRS_WHITE : False, 
-                                  PlayerEnum.MRS_PEACOCK : False}
+                                  PlayerEnum.MR_GREEN : False, 
+                                  PlayerEnum.MRS_PEACOCK : False, 
+                                  PlayerEnum.PROFESSOR_PLUM : False}
         
         self._weapon_enum_list = {WeaponEnum.CANDLESTICK : False, 
                                   WeaponEnum.ROPE : False,
@@ -75,6 +74,7 @@ class ServerModel:
         
         self._suggest_player = PlayerEnum.MISS_SCARLET
         self._current_suggest = 0
+        self._suggestion = []
         
         # Create gameboard
         self._gameboard = Gameboard()
@@ -105,6 +105,12 @@ class ServerModel:
         self._current_suggest = self._current_suggest % 6
         
         return self._turn_order[self._current_suggest]
+    
+    def get_suggestion(self):
+        return self._suggestion
+    
+    def set_suggestion(self, suggestion):
+        self._suggestion = suggestion
     
     # returns the player whose turn it is
     def get_turn_character(self):

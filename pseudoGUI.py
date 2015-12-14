@@ -44,7 +44,50 @@ def suggest():
     client_message.send_message(message)
 
 def disprove():
-    print ''
+    player_enum, weapon, room = client_message.get_cards()
+    suggestion = client_message.get_suggestion()
+    
+    matched_player_enum = False
+    matched_weapon = False
+    matched_room = False
+    
+    if player_enum == suggestion[0]:
+        print "Suggestion matches your player_enum"
+        
+        matched_player_enum = True
+    
+    if weapon == suggestion[1]:
+        print "Suggestion matches your weapon"
+        
+        matched_weapon = True
+    
+    if room == suggestion[2]:
+        print "Suggestion matches your room"
+        
+        matched_room = True
+    
+    message_args = ['', '', '']
+    
+    if matched_player_enum == True or matched_weapon == True or matched_room == True:
+        matched = False
+        
+        while matched == False:
+            print 'Type 1 to show player, 2 to show weapon, or 3 to show room'
+            
+            choice = int(sys.stdin.readline().rstrip())
+            
+            if choice == 1 and matched_player_enum == True:
+                matched = True
+                message_args[0] = player_enum
+            elif choice == 2 and matched_weapon == True:
+                matched = True
+                message_args[1] = weapon
+            elif choice == 3 and matched_room == True:
+                matched = True
+                message_args[2] = room
+    
+    message = Message(MessageEnum.SUGGEST, 1, message_args)
+    client_message.send_message(message)
 
 def accuse():
     print 'Enter the player_enum to accuse'
