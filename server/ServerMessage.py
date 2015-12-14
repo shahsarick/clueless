@@ -66,9 +66,19 @@ class ServerMessage:
                 self._logger.debug('Received a suggest message.')
             
             # Handle accuse message
-            elif message_enum == MessageEnum.ACCUSE:
+            elif message_enum == MessageEnum.ACCUSE and self.is_turn_player(player) == True:
                 self._logger.debug('Received an accusation message.')
-            
+                player_enum = player.get_player_enum()
+                if message_args == self._server_model._envelope == True:
+                    # Send a suggest message to all clients
+                    response_args = [message_args, player_enum, True]
+                    return_message = Message(MessageEnum.ACCUSE, 1, response_args)
+                    self._output_queue.put((True, return_message))
+                else:
+                    response_args = [message_args, player_enum, False]
+                    return_message = Message(MessageEnum.ACCUSE, 1, response_args)
+                    self._output_queue.put((True, return_message))
+
             # Handle lobby ready and lobby unready messages
             elif message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
                 # Check to see if the game has already started

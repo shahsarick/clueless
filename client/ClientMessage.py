@@ -118,6 +118,23 @@ class ClientMessage:
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE:
                 self._logger.debug('Received an accusation message.')
+                accusation = message_args[0]
+                player_enum = message_args[1]
+                correct = message_args[2]
+
+                player_enum_str = PlayerEnum.to_string(player_enum)
+                suspect_str = PlayerEnum.to_string(accusation[0])
+                weapon_str = WeaponEnum.to_string(accusation[1])
+                room_str = RoomEnum.to_string(accusation[2])
+                self._logger.debug('%s has made the following accusation: (%s, %s, %s)', player_enum_str, suspect_str, weapon_str, room_str)
+
+                if correct == True:
+                    self._logger.debug('This player was correct and has won the game!')
+                    self._client_model.set_accuse_status(True)
+                    #TODO: end the game when a player makes a correct accusation
+                else:
+                    self._logger.debug('This accusation was false! This player has lost the game!')
+                    self._client_model.set_accuse_status(True)
             
             # Handle lobby ready and unready messages
             elif message_enum == MessageEnum.LOBBY_ADD or message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:

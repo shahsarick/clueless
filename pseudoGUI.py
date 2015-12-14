@@ -47,7 +47,15 @@ def disprove():
     print ''
 
 def accuse():
-    pass
+    print 'Enter the player_enum to accuse'
+    player_enum = int(sys.stdin.readline().rstrip())
+    print 'Enter the weapon_enum to accuse'
+    weapon_enum = int(sys.stdin.readline().rstrip())
+    print 'Enter the room_enum to accuse'
+    room_enum = int(sys.stdin.readline().rstrip())
+    message_args=[player_enum, weapon_enum, room_enum]
+    message = Message(MessageEnum.ACCUSE, 1, message_args)
+    client_message.send_message(message)
 
 def move():
     room = prompt_move()
@@ -88,36 +96,45 @@ sleep(2)
 while True:
     print "Enter a command: "
     player_input = sys.stdin.readline().rstrip()
+    # player can take no more actions if they have already accused
+    if client_message.return_client_model_instance()._has_accused == False:
+        if player_input == "lobby ready":
+            lobby_ready()
+            sleep(3)
+        elif player_input == "lobby unready":
+            lobby_unready()
+            sleep(3)
+        elif player_input == 'move':
+            move()
+            sleep(6)
+            while client_message.need_suggestion() == True:
+                print "Type suggest to make a suggestion."
 
-    if player_input == "lobby ready":
-        lobby_ready()
-        sleep(3)
-    elif player_input == "lobby unready":
-        lobby_unready()
-        sleep(3)
-    elif player_input == 'move':
-        move()
-        sleep(6)
-        
-        while client_message.need_suggestion() == True:
-            print "Type suggest to make a suggestion."
-            
-            player_input = sys.stdin.readline().rstrip()
-            
-            if player_input == 'suggest':
-                client_message.make_suggestion()
-                suggest()
-    elif player_input == 'disprove':
-        disprove()
-    elif player_input == 'over':
-        turn_over()
-        #reset what the client can do/has done
-        client_message.return_client_model_instance().reset_all()
-        sleep(3)
-    elif player_input == 'accuse':
-        # you can only accuse once
-        client_message.return_client_model_instance()._has_accused = True
-        accuse()
-        sleep(3)
+                player_input = sys.stdin.readline().rstrip()
+
+                if player_input == 'suggest':
+                    client_message.make_suggestion()
+                    suggest()
+
+        elif player_input == 'disprove':
+            disprove()
+        elif player_input == 'over':
+            turn_over()
+            #reset what the client can do/has done
+            client_message.return_client_model_instance().reset_all()
+            sleep(3)
+        elif player_input == 'accuse':
+            # you can only accuse once
+            client_message.return_client_model_instance()._has_accused = True
+            accuse()
+            sleep(3)
+
+        elif player_input == 'suggest':
+            client_message.make_suggestion()
+            suggest()
+
+        else:
+            print "command not recognized"
+
     else:
-        print "command not recognized"
+        print "You have already accused, you may take no more actions."

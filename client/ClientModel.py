@@ -96,3 +96,9 @@ class ClientModel:
         self._has_moved = False
         self._has_suggested = False
         self._has_accused = False
+
+    def set_accuse_status(self, bool):
+        if bool == True:
+            self._has_accused = True
+        else:
+            self._has_accused = False
