@@ -64,18 +64,18 @@ class ClientMessage:
                 valid_move = message_args[0]
                 
                 if valid_move == True:
-                    player_enum = message_args[1]
+                    character = message_args[1]
                     old_room = message_args[2]
                     new_room = message_args[3]
                     
                     old_room_str = RoomEnum.to_string(old_room)
-                    player_enum_str = PlayerEnum.to_string(player_enum)
+                    character_str = PlayerEnum.to_string(character)
                     
                     new_room_str = RoomEnum.to_string(new_room)
-                    self._logger.debug('%s moved from "%s" to "%s".', player_enum_str, old_room_str, new_room_str)
+                    self._logger.debug('%s moved from "%s" to "%s".', character_str, old_room_str, new_room_str)
                     
                     # Move the player to the specified room
-                    self._client_model.move_player(player_enum, new_room)
+                    self._client_model.move_character(character, new_room)
                     
                     # Get suggestion status
                     must_suggest = self._client_model.get_suggest_status()
@@ -89,27 +89,29 @@ class ClientMessage:
             
             # Handle suggest messages
             elif message_enum == MessageEnum.SUGGEST:
-                player_enum = message_args[0]
-                suggest_player_enum = message_args[1]
+                character = message_args[0]
+                suggest_character = message_args[1]
+                
                 suspect = message_args[2]
                 weapon = message_args[3]
                 room = message_args[4]
                 
-                player_enum_str = PlayerEnum.to_string(player_enum)
-                suggest_player_enum_str = PlayerEnum.to_string(suggest_player_enum)
+                character_str = PlayerEnum.to_string(character)
+                suggest_character_str = PlayerEnum.to_string(suggest_character)
+                
                 suspect_str = PlayerEnum.to_string(suspect)
                 weapon_str = WeaponEnum.to_string(weapon)
                 room_str = RoomEnum.to_string(room)
                 
-                self._logger.debug('%s has made the following suggestion: (%s, %s, %s)', player_enum_str, suspect_str, weapon_str, room_str)
-                self._logger.debug('%s is now attempting to disprove the suggestion.', suggest_player_enum_str)
+                self._logger.debug('%s has made the following suggestion: (%s, %s, %s)', character_str, suspect_str, weapon_str, room_str)
+                self._logger.debug('%s is now attempting to disprove the suggestion.', suggest_character_str)
                 
                 # Set the suggestion in the client model
                 suggestion = [suspect, weapon, room]
                 self._client_model.set_suggestion(suggestion)
                 
                 # Check to see if this player needs to attempt to disprove the suggestion
-                if suggest_player_enum == self._client_model.get_player_enum():
+                if suggest_character == self._client_model.get_character():
                     self._logger.debug('You must now try to disprove the suggestion!')
                     
                     #TODO: Notify the player to disprove the suggestion by signaling the GUI
@@ -135,19 +137,22 @@ class ClientMessage:
             
             # Handle lobby change player message
             elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
-                player_enum = message_args[0]
-                weapon_enum = message_args[1]
-                room_enum = message_args[2]
+                character = message_args[0]
+                player_enum = message_args[1]
+                weapon_enum = message_args[2]
+                room_enum = message_args[3]
                 
+                self._client_model.set_character(character)
                 self._client_model.set_player_enum(player_enum)
                 self._client_model.set_weapon_enum(weapon_enum)
                 self._client_model.set_room_enum(room_enum)
                 
+                character_str = PlayerEnum.to_string(character)
                 player_enum_str = PlayerEnum.to_string(player_enum)
                 weapon_enum_str = WeaponEnum.to_string(weapon_enum)
                 room_enum_str = RoomEnum.to_string(room_enum)
                 
-                self._logger.debug('You have been assigned the cards: (%s, %s, %s).', player_enum_str, weapon_enum_str, room_enum_str)
+                self._logger.debug('You have been assigned the character %s and the cards: (%s, %s, %s).', character_str, player_enum_str, weapon_enum_str, room_enum_str)
             
             # Handle turn over message
             elif message_enum == MessageEnum.TURN_OVER:
@@ -157,11 +162,11 @@ class ClientMessage:
             
             # Handle turn begin message
             elif message_enum == MessageEnum.TURN_BEGIN:
-                player_enum = message_args[0]
+                character = message_args[0]
                 
-                self._logger.debug('It is now "%s\'s" turn!.', PlayerEnum.to_string(player_enum))
+                self._logger.debug('It is now "%s\'s" turn!.', PlayerEnum.to_string(character))
                 
-                if player_enum == self._client_model.get_player_enum():
+                if character == self._client_model.get_character():
                     self._logger.debug('It is now your turn!')
     
     def need_suggestion(self):
