@@ -163,19 +163,29 @@ class ClientMessage:
                 weapon_str = WeaponEnum.to_string(accusation[1])
                 room_str = RoomEnum.to_string(accusation[2])
                 self._logger.debug('%s has made the following accusation: (%s, %s, %s)', character_str, suspect_str, weapon_str, room_str)
-
+                
+                # Check to see if accusation was correct
                 if correct == True:
-                    self._logger.debug('This player was correct and has won the game!')
-                    self._client_model.set_accuse_status(True)
-                    
-                    self._client_model.set_won_game(True)
+                    # Check to see if accuser is this player
+                    if self._client_model.get_character() == character:
+                        self._logger.debug('You have won the game!')
+                        
+                        self._client_model.set_accuse_status(True)
+                        self._client_model.set_won_game(True)
+                    else:
+                        self._logger.debug('%s was correct and has won the game!', character_str)
                     
                     #TODO: Notify the player that they have won by signaling the GUI
+                # Accusation was wrong
                 else:
-                    self._logger.debug('This accusation was false! This player has lost the game!')
-                    self._client_model.set_accuse_status(True)
-                    
-                    self._client_model.set_won_game(False)
+                    # Check to see if the accuser is this player
+                    if self._client_model.get_character() == character:
+                        self._logger.debug('You have lost the game!')
+                        
+                        self._client_model.set_accuse_status(True)
+                        self._client_model.set_won_game(False)
+                    else:
+                        self._logger.debug('This accusation was false! %s has lost the game!', character_str)
                     
                     #TODO: Notify the player that they have lost by signaling the GUI
             
