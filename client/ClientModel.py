@@ -14,6 +14,8 @@ class ClientModel:
         self._has_accused = False
         self._must_suggest = False
         
+        self._suggestion = []
+        
         # Set card locations
         self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
                                   PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
@@ -39,6 +41,22 @@ class ClientModel:
     # Sets the player_enum
     def set_player_enum(self, player_enum):
         self._player_enum = player_enum
+    
+    # Gets the weapon enum
+    def get_weapon_enum(self):
+        return self._weapon_enum
+    
+    # Sets the weapon enum
+    def set_weapon_enum(self, weapon_enum):
+        self._weapon_enum = weapon_enum
+    
+    # Gets the room enum
+    def get_room_enum(self):
+        return self._room_enum
+    
+    # Sets the room enum
+    def set_room_enum(self, room_enum):
+        self._room_enum = room_enum
     
     # Move the specified player to the specified room
     def move_player(self, player_enum, room):
@@ -70,6 +88,9 @@ class ClientModel:
     def make_suggestion(self):
         self._has_suggested = False
         self._must_suggest = False
+    
+    def set_suggestion(self, suggestion):
+        self._suggestion = suggestion
     
     def reset_all(self):
         self._has_moved = False

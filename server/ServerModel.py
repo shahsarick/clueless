@@ -16,27 +16,45 @@ class ServerModel:
         self._logger = logging.getLogger('ServerModel')
         
         # Create character dictionary and player list for lobby and socket use
-        self._character_list = {PlayerEnum.MISS_SCARLET : False, \
-                                PlayerEnum.COLONEL_MUSTARD : False, \
-                                PlayerEnum.PROFESSOR_PLUM : False, \
-                                PlayerEnum.MR_GREEN : False, \
-                                PlayerEnum.MRS_WHITE : False, \
+        self._character_list = {PlayerEnum.MISS_SCARLET : False, 
+                                PlayerEnum.COLONEL_MUSTARD : False, 
+                                PlayerEnum.PROFESSOR_PLUM : False, 
+                                PlayerEnum.MR_GREEN : False, 
+                                PlayerEnum.MRS_WHITE : False, 
                                 PlayerEnum.MRS_PEACOCK : False}
+        
+        self._weapon_list = {WeaponEnum.CANDLESTICK : False, 
+                             WeaponEnum.ROPE : False,
+                             WeaponEnum.LEAD_PIPE : False,
+                             WeaponEnum.REVOLVER : False,
+                             WeaponEnum.WRENCH : False,
+                             WeaponEnum.KNIFE : False}
+        
+        self._room_list = {RoomEnum.STUDY : False, 
+                           RoomEnum.HALL : False, 
+                           RoomEnum.LOUNGE : False, 
+                           RoomEnum.DINING_ROOM : False, 
+                           RoomEnum.KITCHEN : False, 
+                           RoomEnum.BALLROOM : False, 
+                           RoomEnum.CONSERVATORY : False, 
+                           RoomEnum.LIBRARY : False, 
+                           RoomEnum.BILLIARD_ROOM : False}
+        
         self._player_list = []
         
         # Set card locations
-        self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE, \
-                                  PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM, \
-                                  PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY, \
-                                  PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY, \
-                                  PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM, \
+        self._player_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE,
+                                  PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM,
+                                  PlayerEnum.PROFESSOR_PLUM : RoomEnum.HALLWAY_LIBRARY_STUDY,
+                                  PlayerEnum.MR_GREEN : RoomEnum.HALLWAY_BALLROOM_CONSERVATORY,
+                                  PlayerEnum.MRS_WHITE : RoomEnum.HALLWAY_KITCHEN_BALLROOM,
                                   PlayerEnum.MRS_PEACOCK : RoomEnum.HALLWAY_CONSERVATORY_LIBRARY}
         
-        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, \
-                                  WeaponEnum.ROPE : RoomEnum.BALLROOM, \
-                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL, \
-                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM, \
-                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, \
+        self._weapon_locations = {WeaponEnum.CANDLESTICK : RoomEnum.STUDY, 
+                                  WeaponEnum.ROPE : RoomEnum.BALLROOM, 
+                                  WeaponEnum.LEAD_PIPE : RoomEnum.HALL, 
+                                  WeaponEnum.REVOLVER : RoomEnum.BILLIARD_ROOM, 
+                                  WeaponEnum.WRENCH : RoomEnum.CONSERVATORY, 
                                   WeaponEnum.KNIFE : RoomEnum.KITCHEN}
         
         # Set turn order
@@ -92,19 +110,38 @@ class ServerModel:
     
     # Add a player to the player list using the given address
     def add_player(self, address):
-        # Assign an available player_enum from the character list to the new player
-        for player_enum in self._character_list:
+        # Find an available player_enum
+        while 1:
+            player_enum = randint(1, 6)
+            
             if self._character_list[player_enum] == False:
                 self._character_list[player_enum] = True
-                new_player = Player(address, player_enum)
-                
                 break
         
-        # Add the new player to the player list
-        player_enum = new_player.get_player_enum()
-        player_enum_str = PlayerEnum.to_string(player_enum)
+        # Find an available weapon_enum
+        while 1:
+            weapon_enum = randint(1, 6)
+            
+            if self._weapon_list[weapon_enum] == False:
+                self._weapon_list[weapon_enum] = True
+                break
         
-        self._logger.debug('Adding (%s, %s) as %s to player list.', address[0], address[1], player_enum_str)
+        # Find an available room
+        while 1:
+            room_enum = randint(1, 9)
+            
+            if self._room_list[room_enum] == False:
+                self._room_list[room_enum] = True
+                break
+        
+        new_player = Player(address, player_enum, weapon_enum, room_enum)
+        
+        # Add the new player to the player list
+        player_enum_str = PlayerEnum.to_string(player_enum)
+        weapon_enum_str = WeaponEnum.to_string(weapon_enum)
+        room_enum_str = RoomEnum.to_string(room_enum)
+        
+        self._logger.debug('Adding (%s, %s) to player list with cards (%s, %s, %s).', address[0], address[1], player_enum_str, weapon_enum_str, room_enum_str)
         self._player_list.append(new_player)
     
     # Get the player with the associated address
@@ -125,9 +162,15 @@ class ServerModel:
             player_address = player.get_address()
             
             if self.compare_addresses(address, player_address) == True:
-                # Make the player_enum in the character list available to be used by someone else
+                # Make the player, weapon, and room available to be used by someone else
                 player_enum = player.get_player_enum()
                 self._character_list[player_enum] = False
+                
+                weapon_enum = player.get_weapon_enum()
+                self._weapon_list[weapon_enum] = False
+                
+                room_enum = player.get_room_enum()
+                self._room_list[room_enum] = False
                 
                 # Remove the player from the player list
                 self._player_list.remove(player)

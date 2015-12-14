@@ -2,9 +2,11 @@
 
 class Player:
 
-    def __init__(self, address, player_enum):
+    def __init__(self, address, player_enum, weapon_enum, room_enum):
         self._address = address
         self._player_enum = player_enum
+        self._weapon_enum = weapon_enum
+        self._room_enum = room_enum
         
         self._player_name = ''
         self._ready_state = False
@@ -17,6 +19,18 @@ class Player:
     
     def set_player_enum(self, player_enum):
         self._player_enum = player_enum
+    
+    def get_weapon_enum(self):
+        return self._weapon_enum
+    
+    def set_weapon_enum(self, weapon_enum):
+        self._weapon_enum = weapon_enum
+    
+    def get_room_enum(self):
+        return self._room_enum
+    
+    def set_room_enum(self, room_enum):
+        self._room_enum = room_enum
     
     def get_name(self):
         return self._player_name

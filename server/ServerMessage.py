@@ -107,8 +107,10 @@ class ServerMessage:
         # Send the player_enum chosen by the server back to the client
         player = self._server_model.get_player(address)
         player_enum = player.get_player_enum()
+        weapon_enum = player.get_weapon_enum()
+        room_enum = player.get_room_enum()
         
-        response_args = [player_enum]
+        response_args = [player_enum, weapon_enum, room_enum]
         return_message = Message(MessageEnum.LOBBY_CHANGE_PLAYER, 1, response_args)
         self._output_queue.put((False, return_message))
         

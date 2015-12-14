@@ -43,6 +43,9 @@ def suggest():
     message = Message(MessageEnum.SUGGESTION_BEGIN, 1, message_args)
     client_message.send_message(message)
 
+def disprove():
+    print ''
+
 def accuse():
     pass
 
@@ -104,6 +107,8 @@ while True:
             if player_input == 'suggest':
                 client_message.make_suggestion()
                 suggest()
+    elif player_input == 'disprove':
+        disprove()
     elif player_input == 'over':
         turn_over()
         #reset what the client can do/has done

@@ -104,6 +104,11 @@ class ClientMessage:
                 self._logger.debug('%s has made the following suggestion: (%s, %s, %s)', player_enum_str, suspect_str, weapon_str, room_str)
                 self._logger.debug('%s is now attempting to disprove the suggestion.', suggest_player_enum_str)
                 
+                # Set the suggestion in the client model
+                suggestion = [suspect, weapon, room]
+                self._client_model.set_suggestion(suggestion)
+                
+                # Check to see if this player needs to attempt to disprove the suggestion
                 if suggest_player_enum == self._client_model.get_player_enum():
                     self._logger.debug('You must now try to disprove the suggestion!')
                     
@@ -131,10 +136,18 @@ class ClientMessage:
             # Handle lobby change player message
             elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
                 player_enum = message_args[0]
-                
-                self._logger.debug('You have been assigned the character "%s".', PlayerEnum.to_string(player_enum))
+                weapon_enum = message_args[1]
+                room_enum = message_args[2]
                 
                 self._client_model.set_player_enum(player_enum)
+                self._client_model.set_weapon_enum(weapon_enum)
+                self._client_model.set_room_enum(room_enum)
+                
+                player_enum_str = PlayerEnum.to_string(player_enum)
+                weapon_enum_str = WeaponEnum.to_string(weapon_enum)
+                room_enum_str = RoomEnum.to_string(room_enum)
+                
+                self._logger.debug('You have been assigned the cards: (%s, %s, %s).', player_enum_str, weapon_enum_str, room_enum_str)
             
             # Handle turn over message
             elif message_enum == MessageEnum.TURN_OVER:
