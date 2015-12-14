@@ -98,6 +98,8 @@ class ServerMessage:
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
                     self._output_queue.put((True, return_message))
                 else:
+                    # if accusation is wrong set the players lost status to True
+                    player.set_lost()
                     response_args = [message_args, character, False]
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
                     self._output_queue.put((True, return_message))
@@ -138,6 +140,13 @@ class ServerMessage:
                 self._server_model.change_turn_character()
                 next_character = self._server_model.get_turn_character()
                 next_turn_player = self._server_model.get_player_from_character(next_character)
+
+                # Skip players that have lost the game
+                while player._has_lost == True:
+                    self._logger.debug('Player: "%s" has lost the game. Their turn is skipped.', player.get_name())
+                    self._server_model.change_turn_character()
+                    next_character = self._server_model.get_turn_character()
+                    next_turn_player = self._server_model.get_player_from_character(next_character)
                 
                 # Skip unconnected players turn
                 while next_turn_player.is_connected() == False:
