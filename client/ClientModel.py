@@ -94,6 +94,7 @@ class ClientModel:
         return self._must_suggest
     
     def make_suggestion(self):
+        self._has_suggested = True
         self._must_suggest = False
     
     def get_suggestion(self):

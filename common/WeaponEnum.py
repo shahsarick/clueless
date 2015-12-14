@@ -22,3 +22,5 @@ class WeaponEnum(object):
             return 'Wrench'
         elif weapon_enum == WeaponEnum.KNIFE:
             return 'Knife'
+        else:
+            return ''

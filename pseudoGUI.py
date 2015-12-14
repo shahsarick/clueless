@@ -66,7 +66,7 @@ def disprove():
         
         matched_room = True
     
-    message_args = ['', '', '']
+    message_args = [None, None, None]
     
     if matched_player_enum == True or matched_weapon == True or matched_room == True:
         matched = False

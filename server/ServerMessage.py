@@ -73,7 +73,7 @@ class ServerMessage:
                 room = message_args[2]
                 
                 # Player disproved the suggestion
-                if player_enum is not '' or weapon is not '' or room is not '':
+                if player_enum is not None or weapon is not None or room is not None:
                     response_args = [character, player_enum, weapon, room]
                     return_message = Message(MessageEnum.SUGGESTION_END, 1, response_args)
                     

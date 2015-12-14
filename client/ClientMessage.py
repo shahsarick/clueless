@@ -129,14 +129,14 @@ class ClientMessage:
                     
                     character_str = PlayerEnum.to_string(character)
                     
-                    if player_enum is not '':
+                    if player_enum is not None:
                         player_enum_str = PlayerEnum.to_string(player_enum)
                         self._logger.debug('%s disproved you with the %s card.', character_str, player_enum_str)
-                    elif weapon is not '':
-                        weapon_str = PlayerEnum.to_string(weapon)
+                    elif weapon is not None:
+                        weapon_str = WeaponEnum.to_string(weapon)
                         self._logger.debug('%s disproved you with the %s card.', character_str, weapon_str)
-                    elif room is not '':
-                        room_str = PlayerEnum.to_string(room)
+                    elif room is not None:
+                        room_str = RoomEnum.to_string(room)
                         self._logger.debug('%s disproved you with the %s card.', character_str, room_str)
                     else:
                         self._logger.debug('No one disproved your suggestion!')
