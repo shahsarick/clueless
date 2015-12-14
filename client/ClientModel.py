@@ -16,6 +16,10 @@ class ClientModel:
         
         self._suggestion = []
         
+        self._player_enum_list = []
+        self._weapon_enum_list = []
+        self._room_enum_list = []
+        
         # Set card locations
         self._character_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE,
                                      PlayerEnum.COLONEL_MUSTARD : RoomEnum.HALLWAY_LOUNGE_DINING_ROOM,
@@ -41,28 +45,28 @@ class ClientModel:
         self._character = character
     
     # Gets the player_enum
-    def get_player_enum(self):
-        return self._player_enum
+    def get_player_enum_list(self):
+        return self._player_enum_list
     
     # Sets the player_enum
-    def set_player_enum(self, player_enum):
-        self._player_enum = player_enum
+    def set_player_enum_list(self, player_enum_list):
+        self._player_enum_list = player_enum_list
     
     # Gets the weapon enum
-    def get_weapon_enum(self):
-        return self._weapon_enum
+    def get_weapon_enum_list(self):
+        return self._weapon_enum_list
     
     # Sets the weapon enum
-    def set_weapon_enum(self, weapon_enum):
-        self._weapon_enum = weapon_enum
+    def set_weapon_enum_list(self, weapon_enum_list):
+        self._weapon_enum_list = weapon_enum_list
     
     # Gets the room enum
-    def get_room_enum(self):
-        return self._room_enum
+    def get_room_enum_list(self):
+        return self._room_enum_list
     
     # Sets the room enum
-    def set_room_enum(self, room_enum):
-        self._room_enum = room_enum
+    def set_room_enum_list(self, room_enum_list):
+        self._room_enum_list = room_enum_list
     
     # Move the specified character to the specified room
     def move_character(self, character, room):
@@ -87,7 +91,7 @@ class ClientModel:
         return current_room
     
     def get_cards(self):
-        return (self._player_enum, self._weapon_enum, self._room_enum)
+        return (self._player_enum_list, self._weapon_enum_list, self._room_enum_list)
     
     # Retrieve the move status for the player
     def get_suggest_status(self):
@@ -111,8 +115,5 @@ class ClientModel:
         self._has_suggested = False
         self._has_accused = False
 
-    def set_accuse_status(self, bool):
-        if bool == True:
-            self._has_accused = True
-        else:
-            self._has_accused = False
+    def set_accuse_status(self, accuse_status):
+        self._has_accused = accuse_status

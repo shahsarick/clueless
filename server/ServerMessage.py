@@ -93,6 +93,8 @@ class ServerMessage:
                     suggester = self._server_model.get_suggester()
                     disprover = self._server_model.get_next_suggest_character()
                     
+                    #TODO: Process disprover to see if they are connected or not. If not connected, do not send out message below yet. Instead, process suggestion for player (handles disconnected and missing players).
+                    
                     # All players have attempted to disprove suggestion
                     if suggester == disprover:
                         self._logger.debug('Suggestion could not be disproven by anyone.')
@@ -108,17 +110,22 @@ class ServerMessage:
             
             # Handle accuse message
             elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
-                self._logger.debug('Received an accusation message.')
+                character = player.get_character()
+                suspect = message_args[0]
+                weapon = message_args[1]
+                room = message_args[2]
                 
-                player_enum = player.get_player_enum()
+                accussation = self._server_model.check_accusation(suspect, weapon, room)
                 
-                if message_args == self._server_model._envelope == True:
-                    # Send a suggest message to all clients
-                    response_args = [message_args, player_enum, True]
+                if accussation == True:
+                    #TODO: End the game in ServerModel (reset values so we can start a new game without turning the server off?)
+                    
+                    # Send an accuse message to all clients
+                    response_args = [message_args, character, True]
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
                     self._output_queue.put((True, return_message))
                 else:
-                    response_args = [message_args, player_enum, False]
+                    response_args = [message_args, character, False]
                     return_message = Message(MessageEnum.ACCUSE, 1, response_args)
                     self._output_queue.put((True, return_message))
 
@@ -156,6 +163,8 @@ class ServerMessage:
                 return_message = Message(MessageEnum.TURN_OVER, 1, response_args)
                 self._output_queue.put((True, return_message))
                 
+                #TODO: Process turn character to see if they are connected or not. If not connected, do not send out message below. Instead, process turn for player (handles disconnected and missing players)
+                
                 # Send turn begin message
                 response_args = [self._server_model.get_turn_character()]
                 return_message = Message(MessageEnum.TURN_BEGIN, 1, response_args)
@@ -169,11 +178,12 @@ class ServerMessage:
         player = self._server_model.get_player(address)
         
         character = player.get_character()
-        player_enum = player.get_player_enum()
-        weapon_enum = player.get_weapon_enum()
-        room_enum = player.get_room_enum()
+        player_enum_list = player.get_player_enum_list()
+        weapon_enum_list = player.get_weapon_enum_list()
+        room_enum_list = player.get_room_enum_list()
         
-        response_args = [character, player_enum, weapon_enum, room_enum]
+        # Send the card list to the player that connected
+        response_args = [character, player_enum_list, weapon_enum_list, room_enum_list]
         return_message = Message(MessageEnum.LOBBY_CHANGE_PLAYER, 1, response_args)
         self._output_queue.put((False, return_message))
         

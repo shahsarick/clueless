@@ -97,9 +97,6 @@ class CluelessServer:
                         # Handle the request
                         self._server_message.handle_message(message_list, player)
                         
-                        # Send response to the client(s)
-                        self._logger.debug('Sending message(s) to client(s).')
-                        
                         # Send all messages in the output queue
                         self.send_all_messages(sock)
                     # Client disconnected

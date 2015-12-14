@@ -36,6 +36,7 @@ class ClientMessage:
         else:
             return False
     
+    # Returns the reference to the client model instance
     def return_client_model_instance(self):
         return self._client_model
     
@@ -149,22 +150,26 @@ class ClientMessage:
             elif message_enum == MessageEnum.ACCUSE:
                 self._logger.debug('Received an accusation message.')
                 accusation = message_args[0]
-                player_enum = message_args[1]
+                character = message_args[1]
                 correct = message_args[2]
 
-                player_enum_str = PlayerEnum.to_string(player_enum)
+                character_str = PlayerEnum.to_string(self._client_model.get_character())
                 suspect_str = PlayerEnum.to_string(accusation[0])
                 weapon_str = WeaponEnum.to_string(accusation[1])
                 room_str = RoomEnum.to_string(accusation[2])
-                self._logger.debug('%s has made the following accusation: (%s, %s, %s)', player_enum_str, suspect_str, weapon_str, room_str)
+                self._logger.debug('%s has made the following accusation: (%s, %s, %s)', character_str, suspect_str, weapon_str, room_str)
 
                 if correct == True:
                     self._logger.debug('This player was correct and has won the game!')
                     self._client_model.set_accuse_status(True)
-                    #TODO: end the game when a player makes a correct accusation
+                    
+                    #TODO: Notify the player that they have won by signaling the GUI
                 else:
                     self._logger.debug('This accusation was false! This player has lost the game!')
                     self._client_model.set_accuse_status(True)
+                    
+                    #TODO: End the game in ClientModel
+                    #TODO: Notify the player that they have lost by signaling the GUI
             
             # Handle lobby ready and unready messages
             elif message_enum == MessageEnum.LOBBY_ADD or message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
@@ -179,26 +184,32 @@ class ClientMessage:
                     ready_state = lobby_entry[1]
                     
                     self._logger.debug('\t(%s, %s).', player_name, ready_state)
+                
+                #TODO: Notify the player that the lobby has been updated by signaling the GUI
             
             # Handle lobby change player message
             elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
                 character = message_args[0]
-                player_enum = message_args[1]
-                weapon_enum = message_args[2]
-                room_enum = message_args[3]
+                player_enum_list = message_args[1]
+                weapon_enum_list = message_args[2]
+                room_enum_list = message_args[3]
                 
                 self._client_model.set_character(character)
-                self._client_model.set_player_enum(player_enum)
-                self._client_model.set_weapon_enum(weapon_enum)
-                self._client_model.set_room_enum(room_enum)
+                self._client_model.set_player_enum_list(player_enum_list)
+                self._client_model.set_weapon_enum_list(weapon_enum_list)
+                self._client_model.set_room_enum_list(room_enum_list)
                 
                 character_str = PlayerEnum.to_string(character)
-                player_enum_str = PlayerEnum.to_string(player_enum)
-                weapon_enum_str = WeaponEnum.to_string(weapon_enum)
-                room_enum_str = RoomEnum.to_string(room_enum)
+                player_enum_list_str = ", ".join(PlayerEnum.to_string(pe) for pe in player_enum_list)
+                weapon_enum_list_str = ", ".join(WeaponEnum.to_string(we) for we in weapon_enum_list)
+                room_enum_list_str = ", ".join(RoomEnum.to_string(re) for re in room_enum_list)
                 
-                self._logger.debug('You have been assigned the character %s and the cards: (%s, %s, %s).', character_str, player_enum_str, weapon_enum_str, room_enum_str)
-            
+                self._logger.debug('You have been assigned the character %s and the following cards:.', character_str)
+                self._logger.debug('Player enum list: %s', player_enum_list_str)
+                self._logger.debug('Weapon enum list: %s', weapon_enum_list_str)
+                self._logger.debug('Room enum list: %s', room_enum_list_str)
+                
+                #TODO: Notify the player of which character they are and what cards they have by signaling the GUI
             # Handle turn over message
             elif message_enum == MessageEnum.TURN_OVER:
                 character = message_args[0]
@@ -208,7 +219,8 @@ class ClientMessage:
                 # Reset move variables for turn player
                 if character == self._client_model.get_character():
                     self._client_model.reset_all()
-            
+                
+                #TODO: Notify the player that the specified character's turn is over by signaling the GUI
             # Handle turn begin message
             elif message_enum == MessageEnum.TURN_BEGIN:
                 character = message_args[0]
@@ -217,15 +229,21 @@ class ClientMessage:
                 
                 if character == self._client_model.get_character():
                     self._logger.debug('It is now your turn!')
+                
+                    #TODO: Notify the player that it is their turn by signaling the GUI
     
+    # Checks to see if a suggestion must be made
     def need_suggestion(self):
         return self._client_model.get_suggest_status()
     
+    # Makes a suggestion
     def make_suggestion(self):
         self._client_model.make_suggestion()
     
+    # Gets the suggestion made
     def get_suggestion(self):
         return self._client_model.get_suggestion()
     
+    # Get the list of cards owned by this client
     def get_cards(self):
         return self._client_model.get_cards()

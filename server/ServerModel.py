@@ -14,14 +14,7 @@ class ServerModel:
     def __init__(self):
         self._logger = logging.getLogger('ServerModel')
         
-        # Create character dictionary and player list for lobby and socket use
-        self._character_list = {PlayerEnum.MISS_SCARLET : False, 
-                                PlayerEnum.COLONEL_MUSTARD : False, 
-                                PlayerEnum.MRS_WHITE : False, 
-                                PlayerEnum.MR_GREEN : False, 
-                                PlayerEnum.MRS_PEACOCK : False, 
-                                PlayerEnum.PROFESSOR_PLUM : False}
-        
+        # Create the card dictionaries and player list
         self._player_enum_list = {PlayerEnum.MISS_SCARLET : False, 
                                   PlayerEnum.COLONEL_MUSTARD : False, 
                                   PlayerEnum.MRS_WHITE : False, 
@@ -46,7 +39,12 @@ class ServerModel:
                                 RoomEnum.LIBRARY : False, 
                                 RoomEnum.BILLIARD_ROOM : False}
         
-        self._player_list = []
+        self._player_list = [Player(PlayerEnum.MISS_SCARLET), 
+                             Player(PlayerEnum.COLONEL_MUSTARD), 
+                             Player(PlayerEnum.MRS_WHITE), 
+                             Player(PlayerEnum.MR_GREEN), 
+                             Player(PlayerEnum.MRS_PEACOCK), 
+                             Player(PlayerEnum.PROFESSOR_PLUM)]
         
         # Set card locations
         self._character_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE,
@@ -76,18 +74,110 @@ class ServerModel:
         self._current_suggest = 0
         self._suggestion = []
         
+        self._game_started = False
+        
         # Create gameboard
         self._gameboard = Gameboard()
         self._gameboard.setup_rooms()
+        
+        # Handle cards
+        self.fill_envelope()
+        self.deal_cards()
+    
+    # Fills the envelope
+    def fill_envelope(self):
+        self._logger.debug('Filling envelope.')
         
         # Fill envelope with suspect, weapon, and room
         suspect = randint(1, 6)
         weapon = randint(1, 6)
         room = randint(1, 9)
         
-        self._envelope = [suspect, weapon, room]
+        self._player_enum_list[suspect] = True
+        self._weapon_enum_list[weapon] = True
+        self._room_enum_list[room] = True
         
-        self._game_started = False
+        #TODO: Remove
+        self._logger.debug('Envelope: (%s, %s, %s).', PlayerEnum.to_string(suspect), WeaponEnum.to_string(weapon), RoomEnum.to_string(room))
+        
+        self._envelope = [suspect, weapon, room]
+    
+    # Deals the cards to each player
+    def deal_cards(self):
+        self._logger.debug('Dealing cards to players.')
+        
+        player_index = 0
+        
+        while 1:
+            # Get player to deal to
+            player = self._player_list[player_index]
+            
+            # Get card type to deal
+            card_added = False
+            card_list = randint(1, 3)
+            
+            # Add a player card to the player
+            if card_list == 1:
+                # Check to see if this dictionary has cards available
+                if self.dictionary_has_cards(self._player_enum_list) == True:
+                    # Loop until we find a card available to deal
+                    while 1:
+                        player_enum = randint(1, 6)
+                        
+                        # Add card to player entry
+                        if self._player_enum_list[player_enum] == False:
+                            self._player_enum_list[player_enum] = True
+                            player.add_player_enum(player_enum)
+                            
+                            card_added = True
+                            break
+            # Add a weapon card to the player 
+            elif card_list == 2:
+                # Check to see if this dictionary has cards available
+                if self.dictionary_has_cards(self._weapon_enum_list) == True:
+                    while 1:
+                        weapon_enum = randint(1, 6)
+                        
+                        # Add card to player entry
+                        if self._weapon_enum_list[weapon_enum] == False:
+                            self._weapon_enum_list[weapon_enum] = True
+                            player.add_weapon_enum(weapon_enum)
+                            
+                            card_added = True
+                            break
+            # Add a room to the player
+            else:
+                # Check to see if this dictionary has cards available
+                if self.dictionary_has_cards(self._room_enum_list) == True:
+                    while 1:
+                        room_enum = randint(1, 9)
+                        
+                        # Add card to player entry
+                        if self._room_enum_list[room_enum] == False:
+                            self._room_enum_list[room_enum] = True
+                            player.add_room_enum(room_enum)
+                            
+                            card_added = True
+                            break
+            
+            # Increment player index
+            if card_added == True:
+                player_index += 1
+                player_index = player_index % 6
+            
+            # Check to see if all cards have been dealt
+            if self.dictionary_has_cards(self._player_enum_list) == False and \
+               self.dictionary_has_cards(self._weapon_enum_list) == False and \
+               self.dictionary_has_cards(self._room_enum_list) == False:
+                break
+    
+    # Check to see if the dictionary has an available cards left to deal
+    def dictionary_has_cards(self, dictionary):
+        for entry in dictionary:
+            if dictionary[entry] == False:
+                return True
+        
+        return False
     
     # Get the player_enum of who initiated the suggestion
     def get_suggester(self):
@@ -124,58 +214,39 @@ class ServerModel:
     # Add a player to the player list using the given address
     def add_player(self, address):
         # Assign an available player_enum from the character list to the new player
-        for character in self._character_list:
-            if self._character_list[character] == False:
-                self._character_list[character] = True
+        for player in self._player_list:
+            if player.is_connected() == False:
+                player.set_connected()
+                player.set_address(address)
+                player.set_ready_status(False)
                 
                 break
         
-        # Find an available weapon_enum
-        while 1:
-            player_enum = randint(1, 6)
-            
-            if self._player_enum_list[player_enum] == False:
-                self._player_enum_list[player_enum] = True
-                break
+        character = player.get_character()
+        player_enum_list = player.get_player_enum_list()
+        weapon_enum_list = player.get_weapon_enum_list()
+        room_enum_list = player.get_room_enum_list()
         
-        # Find an available weapon_enum
-        while 1:
-            weapon_enum = randint(1, 6)
-            
-            if self._weapon_enum_list[weapon_enum] == False:
-                self._weapon_enum_list[weapon_enum] = True
-                break
-        
-        # Find an available room
-        while 1:
-            room_enum = randint(1, 9)
-            
-            if self._room_enum_list[room_enum] == False:
-                self._room_enum_list[room_enum] = True
-                break
-        
-        new_player = Player(address, character, player_enum, weapon_enum, room_enum)
-        
-        # Add the new player to the player list
         character_str = PlayerEnum.to_string(character)
-        player_enum_str = PlayerEnum.to_string(player_enum)
-        weapon_enum_str = WeaponEnum.to_string(weapon_enum)
-        room_enum_str = RoomEnum.to_string(room_enum)
+        player_enum_list_str = ", ".join(PlayerEnum.to_string(pe) for pe in player_enum_list)
+        weapon_enum_list_str = ", ".join(WeaponEnum.to_string(we) for we in weapon_enum_list)
+        room_enum_list_str = ", ".join(RoomEnum.to_string(re) for re in room_enum_list)
         
-        self._logger.debug('Adding (%s, %s) to player list as %s with cards (%s, %s, %s).', address[0], address[1], character_str, player_enum_str, weapon_enum_str, room_enum_str)
-        self._player_list.append(new_player)
+        self._logger.debug('Adding (%s, %s) to player list as %s.', address[0], address[1], character_str)
+        self._logger.debug('Player enum list: %s', player_enum_list_str)
+        self._logger.debug('Weapon enum list: %s', weapon_enum_list_str)
+        self._logger.debug('Room enum list: %s', room_enum_list_str)
     
     # Get the player with the associated address
     def get_player(self, address):
-        self._logger.debug('Retrieving player mapped to (%s, %s).' % address)
-        
         for player in self._player_list:
-            player_address = player.get_address()
-            
-            if self.compare_addresses(address, player_address) == True:
-                return player
+            if player.is_connected() == True:
+                player_address = player.get_address()
+                
+                if self.compare_addresses(address, player_address) == True:
+                    return player
     
-    # Remove the player from the game and free the associated player_enum in the character list
+    # Remove the player from the game
     def remove_player(self, address):
         self._logger.debug('Removing (%s, %s) from player list.' % address)
         
@@ -183,21 +254,8 @@ class ServerModel:
             player_address = player.get_address()
             
             if self.compare_addresses(address, player_address) == True:
-                # Make the character, player, weapon, and room available to be used by someone else
-                character = player.get_character()
-                self._character_list[character] = False
-                
-                player_enum = player.get_player_enum()
-                self._player_enum_list[player_enum] = False
-                
-                weapon_enum = player.get_weapon_enum()
-                self._weapon_enum_list[weapon_enum] = False
-                
-                room_enum = player.get_room_enum()
-                self._room_enum_list[room_enum] = False
-                
-                # Remove the player from the player list
-                self._player_list.remove(player)
+                # Reset the player information
+                player.reset_player()
                 
                 break
     
@@ -241,12 +299,13 @@ class ServerModel:
         lobby_list = []
         
         for player in self._player_list:
-            player_name = player.get_name()
-            ready_state = player.get_ready_status()
-            self._logger.debug('\t(%s, %s)', player_name, ready_state)
-            
-            lobby_entry = [player_name, ready_state]
-            lobby_list.append(lobby_entry)
+            if player.is_connected() == True:
+                player_name = player.get_name()
+                ready_state = player.get_ready_status()
+                self._logger.debug('\t(%s, %s)', player_name, ready_state)
+                
+                lobby_entry = [player_name, ready_state]
+                lobby_list.append(lobby_entry)
         
         return lobby_list
     
@@ -261,12 +320,18 @@ class ServerModel:
         self._logger.debug('Checking to see if the game is ready to start.')
         
         # Check to make sure the minimum number of players are in the game
-        if len(self._player_list) < 2:
+        connected_players = 0
+        
+        for player in self._player_list:
+            if player.is_connected() == True:
+                connected_players += 1
+        
+        if connected_players < 2:
             return False
         
         # Check to see if everyone in the game is ready
         for player in self._player_list:
-            if player.get_ready_status() == False:
+            if player.is_connected() == True and player.get_ready_status() == False:
                 return False
         
         self._game_started = True
@@ -276,4 +341,10 @@ class ServerModel:
     # Check to see if the game has started
     def is_game_started(self):
         return self._game_started
-            
+    
+    # Check to see if the accusation is correct or not
+    def check_accusation(self, suspect, weapon, room):
+        if suspect == self._envelope[0] and weapon == self._envelope[1] and room == self._envelope[2]:
+            return True
+        else:
+            return False

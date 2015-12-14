@@ -10,8 +10,6 @@ from common.MessageEnum import MessageEnum
 from observer.observer import Observer, observerObject
 from time import sleep
 
-#TODO: Move all relevant code to GUI
-
 # GUI methods
 def prompt_move():
     print 'Please enter a room number to move to (see RoomEnum.py)'
@@ -44,27 +42,33 @@ def suggest():
     client_message.send_message(message)
 
 def disprove():
-    player_enum, weapon, room = client_message.get_cards()
+    player_enum_list, weapon_list, room_list = client_message.get_cards()
     suggestion = client_message.get_suggestion()
     
     matched_player_enum = False
     matched_weapon = False
     matched_room = False
     
-    if player_enum == suggestion[0]:
-        print "Suggestion matches your player_enum"
-        
-        matched_player_enum = True
+    for player_enum in player_enum_list:
+        if player_enum == suggestion[0]:
+            print "Suggestion matches your player_enum"
+            
+            matched_player_enum = True
+            break
     
-    if weapon == suggestion[1]:
-        print "Suggestion matches your weapon"
-        
-        matched_weapon = True
+    for weapon in weapon_list:
+        if weapon == suggestion[1]:
+            print "Suggestion matches your weapon"
+            
+            matched_weapon = True
+            break
     
-    if room == suggestion[2]:
-        print "Suggestion matches your room"
-        
-        matched_room = True
+    for room in room_list:
+        if room == suggestion[2]:
+            print "Suggestion matches your room"
+            
+            matched_room = True
+            break
     
     message_args = [None, None, None]
     
