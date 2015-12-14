@@ -110,7 +110,7 @@ class ServerMessage:
             elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
                 self._logger.debug('Received an accusation message.')
                 
-                player_enum = player.get_player_enum()
+                player_enum = player.get_character()
                 
                 if message_args == self._server_model._envelope == True:
                     # Send a suggest message to all clients
