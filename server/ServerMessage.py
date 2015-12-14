@@ -66,7 +66,7 @@ class ServerMessage:
                 self._logger.debug('Received a suggest message.')
             
             # Handle accuse message
-            elif message_enum == MessageEnum.ACCUSE and self.is_turn_player(player) == True:
+            elif message_enum == MessageEnum.ACCUSE and self.is_turn_character(player) == True:
                 self._logger.debug('Received an accusation message.')
                 player_enum = player.get_player_enum()
                 if message_args == self._server_model._envelope == True:
