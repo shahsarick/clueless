@@ -13,18 +13,22 @@ class ClientModel:
         self._logger = logging.getLogger('ClientModel')
         
         self._won = None
+        self._turn_character = False
         
         self._moved_to_room = False
         self._has_moved = False
         self._has_suggested = False
         self._has_accused = False
         self._must_suggest = False
+        self._must_disprove = False
         
         self._suggestion = []
         
         self._player_enum_list = []
         self._weapon_enum_list = []
         self._room_enum_list = []
+        
+        self._lobby_list = []
         
         # Set card locations
         self._character_positions = {PlayerEnum.MISS_SCARLET : RoomEnum.HALLWAY_HALL_LOUNGE,
@@ -92,6 +96,18 @@ class ClientModel:
                 self._moved_to_room = True
                 self._must_suggest = True
     
+    def is_my_turn(self):
+        if self._character == self._turn_character:
+            return True
+        else:
+            return False
+    
+    def get_turn_character(self):
+        return self._turn_character
+    
+    def set_turn_character(self, turn_character):
+        self._turn_character = turn_character
+    
     # Gets whether this player has moved, and if they were moved to a room
     def get_move_status(self):
         return (self._has_moved, self._moved_to_room)
@@ -102,9 +118,22 @@ class ClientModel:
         
         return current_room
     
+    # Retrieves the character positions dictionary
+    def get_character_position_list(self):
+        return self._character_positions
+    
+    def get_weapon_position_list(self):
+        return self._weapon_locations
+    
     # Retrieves a list of the cards this player has
     def get_cards(self):
         return (self._player_enum_list, self._weapon_enum_list, self._room_enum_list)
+    
+    def get_lobby_list(self):
+        return self._lobby_list
+    
+    def set_lobby_list(self, lobby_list):
+        self._lobby_list = lobby_list
     
     # Retrieve the move status for the player
     def get_suggest_status(self):
@@ -137,6 +166,12 @@ class ClientModel:
     # Check to see if this player has made a suggestion
     def has_suggested(self):
         return self._has_suggested
+    
+    def get_disprove_status(self):
+        return self._must_disprove
+    
+    def set_disprove_status(self, disprove_status):
+        self._must_disprove = disprove_status
     
     # Reset turn attributes
     def reset_all(self):

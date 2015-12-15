@@ -120,6 +120,8 @@ class ClientMessage:
                 if disprove_character == self._client_model.get_character():
                     self._logger.debug('You must now try to disprove the suggestion!')
                     
+                    self._client_model.set_disprove_status(True)
+                    
                     #TODO: Notify the player to disprove the suggestion by signaling the GUI
             
             # Handle suggest end message
@@ -174,10 +176,10 @@ class ClientMessage:
                         
                         self._client_model.set_accuse_status(True)
                         self._client_model.set_won_game(True)
+                        
+                        #TODO: Notify the player that they have won by signaling the GUI
                     else:
                         self._logger.debug('%s was correct and has won the game!', character_str)
-                    
-                    #TODO: Notify the player that they have won by signaling the GUI
                 # Accusation was wrong
                 else:
                     # Check to see if the accuser is this player
@@ -186,10 +188,10 @@ class ClientMessage:
                         
                         self._client_model.set_accuse_status(True)
                         self._client_model.set_won_game(False)
+                        
+                        #TODO: Notify the player that they have lost by signaling the GUI
                     else:
                         self._logger.debug('This accusation was false! %s has lost the game!', character_str)
-                    
-                    #TODO: Notify the player that they have lost by signaling the GUI
             
             # Handle lobby ready and unready messages
             elif message_enum == MessageEnum.LOBBY_ADD or message_enum == MessageEnum.LOBBY_READY or message_enum == MessageEnum.LOBBY_UNREADY:
@@ -204,6 +206,8 @@ class ClientMessage:
                     ready_state = lobby_entry[1]
                     
                     self._logger.debug('\t(%s, %s).', player_name, ready_state)
+                
+                self._client_model.set_lobby_list(lobby_list)
                 
                 #TODO: Notify the player that the lobby has been updated by signaling the GUI
             
@@ -239,11 +243,13 @@ class ClientMessage:
                 # Reset move variables for turn player
                 if character == self._client_model.get_character():
                     self._client_model.reset_all()
-                
-                #TODO: Notify the player that the specified character's turn is over by signaling the GUI
+                    
+                    #TODO: Notify the player that it is no longer their turn. Is this needed at all? I think we can just have it signal when it's someone elses turn?
             # Handle turn begin message
             elif message_enum == MessageEnum.TURN_BEGIN:
                 character = message_args[0]
+                
+                self._client_model.set_turn_character(character)
                 
                 if character == self._client_model.get_character():
                     self._logger.debug('It is now your turn!')
