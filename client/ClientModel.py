@@ -129,6 +129,10 @@ class ClientModel:
     def get_cards(self):
         return (self._player_enum_list, self._weapon_enum_list, self._room_enum_list)
     
+    # Get the list of valid rooms that the specified room can move to
+    def get_valid_moves(self, room):
+        return self._gameboard.get_valid_moves(room)
+    
     def get_lobby_list(self):
         return self._lobby_list
     
