@@ -90,9 +90,13 @@ class ClientMessage:
                         self._logger.debug('You need to make a suggestion!')
                         
                         #TODO: Notify the player to make a suggestion by signaling the GUI
+                        self._callback()
                     else:
                         if self._client_model.get_character() == character:
+                            #TODO: Notify the player to make an accusation by signaling the GUI
                             self._logger.debug('You must now make an accusation or end your turn.')
+                            
+                            self._callback()
                 else:
                     self._logger.debug('Invalid move!')
             
@@ -126,6 +130,7 @@ class ClientMessage:
                     self._client_model.set_disprove_status(True)
                     
                     #TODO: Notify the player to disprove the suggestion by signaling the GUI
+                    self._callback()
             
             # Handle suggest end message
             elif message_enum == MessageEnum.SUGGESTION_END:
@@ -155,6 +160,7 @@ class ClientMessage:
                     self._logger.debug('You must now make an accusation or end your turn.')
                     
                     #TODO: Notify the player to make an accusation by signaling the GUI
+                    self._callback()
                 else:
                     self._logger.debug('%s disproved the suggestion!', character_str)
             
@@ -181,6 +187,7 @@ class ClientMessage:
                         self._client_model.set_won_game(True)
                         
                         #TODO: Notify the player that they have won by signaling the GUI
+                        self._callback()
                     else:
                         self._logger.debug('%s was correct and has won the game!', character_str)
                 # Accusation was wrong
@@ -193,6 +200,7 @@ class ClientMessage:
                         self._client_model.set_won_game(False)
                         
                         #TODO: Notify the player that they have lost by signaling the GUI
+                        self._callback()
                     else:
                         self._logger.debug('This accusation was false! %s has lost the game!', character_str)
             
@@ -213,6 +221,7 @@ class ClientMessage:
                 self._client_model.set_lobby_list(lobby_list)
                 
                 #TODO: Notify the player that the lobby has been updated by signaling the GUI
+                self._callback()
             
             # Handle lobby change player message
             elif message_enum == MessageEnum.LOBBY_CHANGE_PLAYER:
@@ -237,6 +246,7 @@ class ClientMessage:
                 self._logger.debug('Room enum list: %s', room_enum_list_str)
                 
                 #TODO: Notify the player of which character they are and what cards they have by signaling the GUI
+                self._callback()
             # Handle turn over message
             elif message_enum == MessageEnum.TURN_OVER:
                 character = message_args[0]
@@ -248,6 +258,7 @@ class ClientMessage:
                     self._client_model.reset_all()
                     
                     #TODO: Notify the player that it is no longer their turn. Is this needed at all? I think we can just have it signal when it's someone elses turn?
+                    self._callback()
             # Handle turn begin message
             elif message_enum == MessageEnum.TURN_BEGIN:
                 character = message_args[0]
@@ -258,6 +269,7 @@ class ClientMessage:
                     self._logger.debug('It is now your turn!')
                     
                     #TODO: Notify the player that it is their turn by signaling the GUI
+                    self._callback()
                 else:
                     self._logger.debug('It is now "%s\'s" turn!', PlayerEnum.to_string(character))
     
