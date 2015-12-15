@@ -26,6 +26,9 @@ class ClientMessage:
         self._client = Client(self._input_queue, self._output_queue)
         self._client_model = ClientModel()
     
+    def set_gui_callback(self, callback):
+        self._callback = callback
+    
     # Connects to the server
     def connect_to_server(self, host, port):
         #TODO: May need to move connect_to_server into worker thread to prevent server messages coming back before we're ready for them
